@@ -1,0 +1,56 @@
+{
+  "name": "new-moon-app",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A Midnight Network application created with create-mn-app",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "compile": "wsl bash -c \"cd /home/rudra/new-moon-app && export PATH='/home/rudra/.local/bin:\\$PATH' && npm run compile && rsync -av --delete /home/rudra/new-moon-app/contracts/managed/ ./contracts/managed/\"",
+    "build": "npx tsc --noEmit || true",
+    "setup": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run setup && cp /home/rudra/new-moon-app/.midnight-state.json ./.midnight-state.json && rsync -av --delete /home/rudra/new-moon-app/.midnight-wallet-state/ ./.midnight-wallet-state/\"",
+    "deploy": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run deploy && cp /home/rudra/new-moon-app/.midnight-state.json ./.midnight-state.json && rsync -av --delete /home/rudra/new-moon-app/.midnight-wallet-state/ ./.midnight-wallet-state/\"",
+    "cli": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run cli\"",
+    "check-balance": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run check-balance\"",
+    "network": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run network\"",
+    "proof-server:start": "docker compose up -d",
+    "proof-server:stop": "docker compose down",
+    "clean": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run clean\" && rm -rf contracts/managed .midnight-state.json .midnight-wallet-state",
+    "test": "npx tsx tests/contract.test.ts",
+    "test:e2e": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run test:e2e\""
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.16.0",
+    "@midnight-ntwrk/midnight-js-contracts": "4.1.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-network-id": "4.1.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-protocol": "4.1.1",
+    "@midnight-ntwrk/midnight-js-types": "4.1.1",
+    "@midnight-ntwrk/midnight-js-utils": "4.1.1",
+    "@midnight-ntwrk/wallet-sdk": "1.2.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "rxjs": "^7.8.2",
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.23.1",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "keywords": [
+    "midnight",
+    "blockchain",
+    "zero-knowledge",
+    "privacy"
+  ]
+}
