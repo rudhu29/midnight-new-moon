@@ -8,9 +8,9 @@ import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-export type NetworkId = 'undeployed' | 'preview' | 'preprod';
+export type NetworkId = 'undeployed' | 'preview' | 'preprod' | 'mainnet';
 
-export const NETWORK_IDS: readonly NetworkId[] = ['undeployed', 'preview', 'preprod'] as const;
+export const NETWORK_IDS: readonly NetworkId[] = ['undeployed', 'preview', 'preprod', 'mainnet'] as const;
 
 export interface NetworkConfig {
   networkId: NetworkId;
@@ -64,6 +64,15 @@ export const NETWORK_CONFIGS: Record<NetworkId, NetworkConfig> = {
     node:      'https://rpc.preprod.midnight.network',
     proofServer: 'http://127.0.0.1:6300',
     faucet: 'https://midnight-tmnight-preprod.nethermind.dev',
+    composeServices: ['proof-server'],
+  },
+  mainnet: {
+    networkId: 'mainnet',
+    indexer:   'https://indexer.midnight.network/api/v4/graphql',
+    indexerWS: 'wss://indexer.midnight.network/api/v4/graphql/ws',
+    node:      'https://rpc.midnight.network',
+    proofServer: 'http://127.0.0.1:6300',
+    faucet: null,
     composeServices: ['proof-server'],
   },
 };
