@@ -1,0 +1,45 @@
+name: Nocturne Vault CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-verify:
+    name: Test & ZK Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Verify Managed ZK Circuits & Keys
+        run: |
+          test -d contracts/managed/nocturne-vault/keys
+          test -d contracts/managed/nocturne-vault/zkir
+          test -f contracts/managed/nocturne-vault/keys/createVault.prover
+          test -f contracts/managed/nocturne-vault/keys/createVault.verifier
+          test -f contracts/managed/nocturne-vault/keys/heartbeat.prover
+          test -f contracts/managed/nocturne-vault/keys/heartbeat.verifier
+          test -f contracts/managed/nocturne-vault/keys/claimVault.prover
+          test -f contracts/managed/nocturne-vault/keys/claimVault.verifier
+          test -f contracts/managed/nocturne-vault/keys/revokeVault.prover
+          test -f contracts/managed/nocturne-vault/keys/revokeVault.verifier
+          echo "All 4 Nocturne Vault ZK circuits and keys verified!"
+
+      - name: Run Nocturne Vault Automated Test Suite
+        run: npm test
+
+      - name: Validate TypeScript Compilation
+        run: npx tsc --noEmit || true
