@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Moon DApp | Midnight Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="background-decor">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+  </div>
+
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <i class="fa-solid fa-moon brand-icon"></i>
+        <h1>New Moon <span>DApp</span></h1>
+      </div>
+      <div class="network-badge-container">
+        <span class="status-indicator"></span>
+        <span id="network-name">Connecting...</span>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <!-- Info Section -->
+      <section class="card glass status-card full-width">
+        <div class="card-body">
+          <div class="status-row">
+            <div class="status-col">
+              <label><i class="fa-solid fa-file-contract"></i> Contract Address</label>
+              <div class="value-container">
+                <span id="contract-address" class="address-text">Fetching...</span>
+                <button class="btn-icon" onclick="copyText('contract-address')" title="Copy Contract Address">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>
+            <div class="status-col">
+              <label><i class="fa-solid fa-wallet"></i> Wallet Address</label>
+              <div class="value-container">
+                <span id="wallet-address" class="address-text">Fetching...</span>
+                <button class="btn-icon" onclick="copyText('wallet-address')" title="Copy Wallet Address">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Balances Card -->
+      <section class="card glass balance-card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-coins"></i> Asset Holdings</h2>
+        </div>
+        <div class="card-body balance-body">
+          <div class="asset-row">
+            <div class="asset-info">
+              <span class="asset-logo night-logo">N</span>
+              <div>
+                <h3>tNIGHT</h3>
+                <p>Native Utility Token</p>
+              </div>
+            </div>
+            <div class="asset-val">
+              <span id="tnight-balance">0</span>
+            </div>
+          </div>
+
+          <div class="asset-row">
+            <div class="asset-info">
+              <span class="asset-logo dust-logo">D</span>
+              <div>
+                <h3>DUST</h3>
+                <p>Shielded Transaction Fee Asset</p>
+              </div>
+            </div>
+            <div class="asset-val">
+              <span id="dust-balance">0</span>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-full" id="btn-refresh-balance">
+            <i class="fa-solid fa-rotate"></i> Sync Balance
+          </button>
+        </div>
+      </section>
+
+      <!-- Message View Card -->
+      <section class="card glass message-card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-envelope-open-text"></i> Message On-Chain</h2>
+          <button class="btn-icon" id="btn-refresh-message" title="Refresh Message">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
+        </div>
+        <div class="card-body message-body">
+          <div class="message-display-box">
+            <p id="onchain-message" class="message-placeholder">Fetching message...</p>
+          </div>
+          <p class="ledger-tip"><i class="fa-solid fa-circle-info"></i> This message is stored as public ledger state on the Midnight blockchain.</p>
+        </div>
+      </section>
+
+      <!-- Message Action Card -->
+      <section class="card glass action-card full-width">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-pen-nib"></i> Publish New Message</h2>
+        </div>
+        <div class="card-body">
+          <form id="message-form" class="message-form">
+            <div class="input-group">
+              <input type="text" id="new-message-input" placeholder="Type a message to write to the ledger..." required maxlength="100">
+              <button type="submit" class="btn btn-primary" id="btn-submit-tx">
+                <span class="btn-text">Update Ledger</span>
+                <span class="btn-loader hidden"><i class="fa-solid fa-spinner fa-spin"></i></span>
+              </button>
+            </div>
+          </form>
+          <div id="tx-result-box" class="tx-result-box hidden">
+            <div class="tx-success-header">
+              <i class="fa-solid fa-circle-check"></i>
+              <h4>Transaction Submitted Successfully!</h4>
+            </div>
+            <div class="tx-details">
+              <p><strong>Transaction ID:</strong> <span id="tx-id-display">...</span></p>
+              <p><strong>Included in Block:</strong> <span id="tx-block-display">...</span></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>Powered by <strong>Midnight Network</strong> Zero-Knowledge Technology</p>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast hidden">Copied to clipboard!</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
