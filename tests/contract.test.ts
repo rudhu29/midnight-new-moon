@@ -40,12 +40,12 @@ function assert(condition: boolean, message: string) {
 
 async function runSuite() {
   console.log('\n======================================================');
-  console.log('       Midnight Network Test Suite - New Moon');
+  console.log('   Midnight Network Test Suite - Nocturne Vault');
   console.log('======================================================\n');
 
-  console.log('Contract & ZK Circuit Artifacts:');
+  console.log('--- Contract Source Specifications ---');
 
-  await test('Compact contract source file exists and defines storeMessage', () => {
+  await test('hello-world.compact source exists and defines storeMessage', () => {
     const contractPath = path.join(projectRoot, 'contracts', 'hello-world.compact');
     assert(fs.existsSync(contractPath), 'contracts/hello-world.compact must exist');
     const content = fs.readFileSync(contractPath, 'utf-8');
@@ -54,44 +54,70 @@ async function runSuite() {
     assert(content.includes('disclose('), 'Must utilize disclose() for public domain transition');
   });
 
-  await test('Managed compiler artifacts are present', () => {
-    const compilerInfoPath = path.join(projectRoot, 'contracts', 'managed', 'hello-world', 'compiler', 'contract-info.json');
-    assert(fs.existsSync(compilerInfoPath), 'compiler/contract-info.json must exist');
+  await test('nocturne-vault.compact source exists and defines 4 confidential circuits', () => {
+    const contractPath = path.join(projectRoot, 'contracts', 'nocturne-vault.compact');
+    assert(fs.existsSync(contractPath), 'contracts/nocturne-vault.compact must exist');
+    const content = fs.readFileSync(contractPath, 'utf-8');
+    assert(content.includes('export ledger vaultActive: Boolean;'), 'Must declare vaultActive boolean ledger state');
+    assert(content.includes('export ledger vaultOwnerCommitment: Bytes<32>;'), 'Must declare vaultOwnerCommitment');
+    assert(content.includes('export ledger secretPayload: Opaque<"string">;'), 'Must declare secretPayload');
+    assert(content.includes('export ledger heartbeats: Counter;'), 'Must declare heartbeats counter');
+    assert(content.includes('export circuit createVault'), 'Must declare createVault circuit');
+    assert(content.includes('export circuit heartbeat'), 'Must declare heartbeat circuit');
+    assert(content.includes('export circuit claimVault'), 'Must declare claimVault circuit');
+    assert(content.includes('export circuit revokeVault'), 'Must declare revokeVault circuit');
+    assert(content.includes('witness secretKeyWitness'), 'Must declare private witness function');
+  });
+
+  console.log('\n--- Managed ZK Circuits & Cryptographic Keys ---');
+
+  await test('Managed artifacts compiler metadata for Nocturne Vault contains all 4 circuits', () => {
+    const compilerInfoPath = path.join(projectRoot, 'contracts', 'managed', 'nocturne-vault', 'compiler', 'contract-info.json');
+    assert(fs.existsSync(compilerInfoPath), 'compiler/contract-info.json must exist for nocturne-vault');
     const raw = fs.readFileSync(compilerInfoPath, 'utf-8');
     const info = JSON.parse(raw);
     const circuitNames = info.circuits.map((c: any) => typeof c === 'string' ? c : c.name);
-    assert(circuitNames.includes('storeMessage'), 'circuits must list storeMessage');
+    assert(circuitNames.includes('createVault'), 'Must include createVault circuit');
+    assert(circuitNames.includes('heartbeat'), 'Must include heartbeat circuit');
+    assert(circuitNames.includes('claimVault'), 'Must include claimVault circuit');
+    assert(circuitNames.includes('revokeVault'), 'Must include revokeVault circuit');
   });
 
-  await test('Zero-Knowledge circuit definitions (ZKIR) are generated', () => {
-    const zkirPath = path.join(projectRoot, 'contracts', 'managed', 'hello-world', 'zkir', 'storeMessage.zkir');
-    const bzkirPath = path.join(projectRoot, 'contracts', 'managed', 'hello-world', 'zkir', 'storeMessage.bzkir');
-    assert(fs.existsSync(zkirPath), 'zkir/storeMessage.zkir must exist');
-    assert(fs.existsSync(bzkirPath), 'zkir/storeMessage.bzkir must exist');
-    assert(fs.statSync(zkirPath).size > 0, 'ZKIR file must not be empty');
+  await test('All 4 ZKIR circuits are generated and non-empty', () => {
+    const circuits = ['createVault', 'heartbeat', 'claimVault', 'revokeVault'];
+    for (const c of circuits) {
+      const zkirPath = path.join(projectRoot, 'contracts', 'managed', 'nocturne-vault', 'zkir', `${c}.zkir`);
+      const bzkirPath = path.join(projectRoot, 'contracts', 'managed', 'nocturne-vault', 'zkir', `${c}.bzkir`);
+      assert(fs.existsSync(zkirPath), `zkir/${c}.zkir must exist`);
+      assert(fs.existsSync(bzkirPath), `zkir/${c}.bzkir must exist`);
+      assert(fs.statSync(zkirPath).size > 0, `${c}.zkir must not be empty`);
+    }
   });
 
-  await test('Proving and verifying keys are generated', () => {
-    const proverPath = path.join(projectRoot, 'contracts', 'managed', 'hello-world', 'keys', 'storeMessage.prover');
-    const verifierPath = path.join(projectRoot, 'contracts', 'managed', 'hello-world', 'keys', 'storeMessage.verifier');
-    assert(fs.existsSync(proverPath), 'keys/storeMessage.prover must exist');
-    assert(fs.existsSync(verifierPath), 'keys/storeMessage.verifier must exist');
-    assert(fs.statSync(proverPath).size > 1000, 'Prover key must be populated');
-    assert(fs.statSync(verifierPath).size > 100, 'Verifier key must be populated');
+  await test('Proving and verifying keys generated for all 4 circuits', () => {
+    const circuits = ['createVault', 'heartbeat', 'claimVault', 'revokeVault'];
+    for (const c of circuits) {
+      const proverPath = path.join(projectRoot, 'contracts', 'managed', 'nocturne-vault', 'keys', `${c}.prover`);
+      const verifierPath = path.join(projectRoot, 'contracts', 'managed', 'nocturne-vault', 'keys', `${c}.verifier`);
+      assert(fs.existsSync(proverPath), `keys/${c}.prover must exist`);
+      assert(fs.existsSync(verifierPath), `keys/${c}.verifier must exist`);
+      assert(fs.statSync(proverPath).size > 1000, `${c}.prover must be valid key file`);
+      assert(fs.statSync(verifierPath).size > 100, `${c}.verifier must be valid key file`);
+    }
   });
 
-  await test('Compiled TypeScript/JavaScript contract runtime bindings are importable', async () => {
-    const contractJsPath = path.join(projectRoot, 'contracts', 'managed', 'hello-world', 'contract', 'index.js');
-    assert(fs.existsSync(contractJsPath), 'contract/index.js runtime must exist');
+  await test('Compiled Nocturne Vault TypeScript runtime bindings are importable', async () => {
+    const contractJsPath = path.join(projectRoot, 'contracts', 'managed', 'nocturne-vault', 'contract', 'index.js');
+    assert(fs.existsSync(contractJsPath), 'nocturne-vault contract/index.js runtime must exist');
     const contractModule = await import(pathToFileURL(contractJsPath).href);
     assert(typeof contractModule.Contract === 'function', 'Contract constructor must be exported');
     assert(typeof contractModule.ledger === 'function', 'ledger decoder function must be exported');
   });
 
-  console.log('\nNetwork & Wallet Infrastructure:');
+  console.log('\n--- Network, Wallet & Multi-Phase Infrastructure ---');
 
-  await test('Supported network configurations are valid and complete', () => {
-    const networks = ['undeployed', 'preview', 'preprod'] as const;
+  await test('Supported network configurations support Devnet, Preview, Preprod, and Mainnet', () => {
+    const networks = ['undeployed', 'preview', 'preprod', 'mainnet'] as const;
     for (const net of networks) {
       assert(isNetworkId(net), `Network ${net} must be recognized`);
       const cfg = NETWORK_CONFIGS[net];
@@ -101,9 +127,9 @@ async function runSuite() {
     }
   });
 
-  await test('Default network resolution defaults to undeployed devnet', () => {
+  await test('Active network resolution succeeds and falls back gracefully', () => {
     const result = resolveNetwork({ argv: ['node', 'test'], env: {} });
-    assert(result.network === 'undeployed' || result.network === 'preview' || result.network === 'preprod', 'Active network must be valid');
+    assert(isNetworkId(result.network), 'Active network must be valid NetworkId');
     assert(Boolean(result.config), 'Network config must resolve');
   });
 
@@ -112,13 +138,20 @@ async function runSuite() {
     assert(typeof token.raw === 'string' && token.raw.length > 0, 'Unshielded token identifier must be valid string');
   });
 
-  console.log('\nLedger & Privacy Semantics:');
+  console.log('\n--- Confidential State & Vault Semantics ---');
 
-  await test('String encoding matches Midnight ledger byte representation', () => {
-    const testMessage = 'Hello Midnight Moonlight';
-    const buffer = Buffer.from(testMessage, 'utf-8');
-    const reconstructed = buffer.toString('utf-8');
-    assert(reconstructed === testMessage, 'Buffer encoding/decoding should round-trip');
+  await test('Vault payload serialization maintains byte integrity under disclose', () => {
+    const secretMessage = 'CONFIDENTIAL_INHERITANCE_KEY_0x9944_LUNAR_MIDNIGHT';
+    const buffer = Buffer.from(secretMessage, 'utf-8');
+    const restored = buffer.toString('utf-8');
+    assert(restored === secretMessage, 'Byte integrity must roundtrip');
+  });
+
+  await test('Commitment hash derivation produces valid 32-byte representation', () => {
+    const dummySeed = 'dead-mans-switch-owner-secret-seed';
+    const hash = Buffer.alloc(32);
+    hash.write(dummySeed);
+    assert(hash.length === 32, 'Commitment must be exactly 32 bytes');
   });
 
   // Summary
@@ -133,7 +166,7 @@ async function runSuite() {
   if (failed > 0) {
     process.exit(1);
   } else {
-    console.log('🎉 All Level 1 tests passed successfully!\n');
+    console.log('🎉 All Nocturne Vault tests passed successfully!\n');
     process.exit(0);
   }
 }

@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../../../",
+  "sources": ["contracts/nocturne-vault.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EAAA;;;;;;;;;;MAcA,AAAA,WAKC;;;;;cAL0B,iBAA0B;cAAE,eAA+B;;;;;;;;;;;;;;;;;;yCAA3D,iBAA0B,+BAAE,eAA+B;;;;;;;;;6CAA3D,iBAA0B;6CAAE,eAA+B;;;OAKrF;MAGD,AAAA,SAGC;;;;;;;;;;;;;;;;;;;;;;OAAA;MAGD,AAAA,UAIC;;;;;cAJyB,gBAAgC;;;;;;;;;;;yCAAhC,gBAAgC;;;;;;;;;4CAAhC,gBAAgC;;;OAIzD;MAGD,AAAA,WAIC;;;;;cAJ0B,kBAAkC;;;;;;;;;;;yCAAlC,kBAAkC;;;;;;;;;6CAAlC,kBAAkC;;;OAI5D;;;;;;;;;;;;;;GACA;EAxCD;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IAKA;;;;;;;;;yEAAmC;IACnC;;;;;;;;;yEAA8C;IAC9C;;;;;;;;;yEAA8C;IAC9C;;;;;;;;;yEAAkC;;;;;;;GAgCjC;EA1BD,AAAA,cAKC,4BAL0B,iBAA0B,EAAE,eAA+B;;IAClF;;;;;;;2HAAgC,iBAAe;;yEAA3B;IACpB;;;;;;;;;yEAAW;IACX;;;;;;;2HAAyB,eAAa;;yEAAzB;UACb,KAAU;IAAV;;;;;;;;;;6FAAA,KAAU;;;;wEAAA;;GACb;EAGD,AAAA,YAGC;oDAFU;;;;;;;;;;;yHAAW;;UAClB,KAAU;IAAV;;;;;;;;;;6FAAA,KAAU;;;;wEAAA;;GACb;EAGD,AAAA,aAIC,4BAJyB,gBAAgC;oDAC/C;;;;;;;;;;;yHAAW;;IAClB;;;;;;;;;yEAAW;IACX;;;;;;;2HAAyB,gBAAc;;yEAA1B;;GAChB;EAGD,AAAA,cAIC,4BAJ0B,kBAAkC;oDAClD;;;;;;;;;;;yHAAW;;IAClB;;;;;;;;;yEAAW;IACX;;;;;;;2HAAyB,kBAAgB;;yEAA5B;;GAChB;;;;;;;;;;;;;;;;IAlCD;qCAAA;;;;;;;;;;;0GAAmC;KAAA;IACnC;qCAAA;;;;;;;;;;;0GAA8C;KAAA;IAC9C;qCAAA;;;;;;;;;;;0GAA8C;KAAA;IAC9C;qCAAA;;;;;;;;;;;0GAAkC;KAAA;;;;;;;;;;"
+}

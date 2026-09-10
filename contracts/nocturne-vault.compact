@@ -1,0 +1,40 @@
+pragma language_version >= 0.23;
+
+import CompactStandardLibrary;
+
+// Public ledger state
+export ledger vaultActive: Boolean;
+export ledger vaultOwnerCommitment: Bytes<32>;
+export ledger secretPayload: Opaque<"string">;
+export ledger heartbeats: Counter;
+
+// Private witness function to provide authorization key
+witness secretKeyWitness(): Bytes<32>;
+
+// Circuit 1: Initialize a new confidential vault with an owner commitment and initial payload
+export circuit createVault(ownerCommitment: Bytes<32>, initialSecret: Opaque<"string">): [] {
+    vaultOwnerCommitment = disclose(ownerCommitment);
+    vaultActive = disclose(true);
+    secretPayload = disclose(initialSecret);
+    heartbeats.increment(1);
+}
+
+// Circuit 2: Send a heartbeat proof to signal liveness
+export circuit heartbeat(): [] {
+    assert(vaultActive, "Vault is not active");
+    heartbeats.increment(1);
+}
+
+// Circuit 3: Emergency claim / unlock secret payload
+export circuit claimVault(revealedSecret: Opaque<"string">): [] {
+    assert(vaultActive, "Vault is not active");
+    vaultActive = disclose(false);
+    secretPayload = disclose(revealedSecret);
+}
+
+// Circuit 4: Revoke and destroy vault
+export circuit revokeVault(revocationNotice: Opaque<"string">): [] {
+    assert(vaultActive, "Vault is not active");
+    vaultActive = disclose(false);
+    secretPayload = disclose(revocationNotice);
+}
