@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nocturne Vault | Midnight Confidential Secret & Dead-Man's Switch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="background-decor">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-badge">
+          <i class="fa-solid fa-moon brand-icon"></i>
+        </div>
+        <div>
+          <h1>Nocturne <span>Vault</span></h1>
+          <p class="brand-tagline">Zero-Knowledge Confidential Secret & Dead-Man's Switch on Midnight</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="network-badge-container">
+          <span class="status-indicator live"></span>
+          <span id="network-name">Midnight Preprod</span>
+        </div>
+
+        <!-- Lace Wallet Connection Button (Level 2) -->
+        <button class="btn btn-lace" id="btn-connect-lace">
+          <i class="fa-solid fa-wallet"></i>
+          <span id="lace-btn-text">Connect Lace Wallet</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-overview">
+        <i class="fa-solid fa-shield-halved"></i> Overview
+      </button>
+      <button class="tab-btn" data-tab="tab-create">
+        <i class="fa-solid fa-lock"></i> Create Vault
+      </button>
+      <button class="tab-btn" data-tab="tab-heartbeat">
+        <i class="fa-solid fa-heart-pulse"></i> ZK Heartbeat
+      </button>
+      <button class="tab-btn" data-tab="tab-claim">
+        <i class="fa-solid fa-key"></i> Claim / Revoke
+      </button>
+      <button class="tab-btn" data-tab="tab-feedback">
+        <i class="fa-solid fa-comments"></i> Community Feedback
+      </button>
+    </nav>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard-content">
+
+      <!-- TAB 1: OVERVIEW -->
+      <div class="tab-pane active" id="tab-overview">
+        <div class="grid-2col">
+          <!-- Vault Status Card -->
+          <section class="card glass vault-status-card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-vault"></i> Active Vault State</h2>
+              <span id="badge-vault-state" class="badge badge-inactive">No Active Vault</span>
+            </div>
+            <div class="card-body">
+              <div class="info-row">
+                <span class="label">Owner Commitment:</span>
+                <span class="val address-text" id="disp-vault-commitment">0x0000...0000</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Beneficiary:</span>
+                <span class="val address-text" id="disp-vault-beneficiary">Not Configured</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Liveness Heartbeats:</span>
+                <span class="val highlight" id="disp-vault-heartbeats">0 Verified</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Inactivity Threshold:</span>
+                <span class="val" id="disp-vault-duration">72 Hours</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Last Heartbeat:</span>
+                <span class="val text-muted" id="disp-vault-last-hb">Never</span>
+              </div>
+
+              <div class="vault-actions-bar">
+                <button class="btn btn-primary" onclick="switchTab('tab-create')">
+                  <i class="fa-solid fa-plus"></i> New Vault
+                </button>
+                <button class="btn btn-secondary" onclick="switchTab('tab-heartbeat')">
+                  <i class="fa-solid fa-heart-pulse"></i> Send Heartbeat
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Holdings & Network Card -->
+          <section class="card glass balances-card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-coins"></i> Network Assets</h2>
+              <button class="btn-icon" id="btn-refresh-balance" title="Sync Balances">
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="asset-grid">
+                <div class="asset-box">
+                  <div class="asset-icon night-icon">N</div>
+                  <div>
+                    <span class="asset-title">tNIGHT</span>
+                    <h3 id="tnight-balance">0</h3>
+                    <p class="asset-desc">Native Network Token</p>
+                  </div>
+                </div>
+
+                <div class="asset-box">
+                  <div class="asset-icon dust-icon">D</div>
+                  <div>
+                    <span class="asset-title">DUST</span>
+                    <h3 id="dust-balance">0</h3>
+                    <p class="asset-desc">Shielded Gas Asset</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="addresses-container">
+                <div class="address-item">
+                  <label><i class="fa-solid fa-file-contract"></i> Contract Address:</label>
+                  <div class="addr-box">
+                    <span id="contract-address">Fetching...</span>
+                    <button class="btn-copy" onclick="copyText('contract-address')" title="Copy Contract Address">
+                      <i class="fa-regular fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="address-item">
+                  <label><i class="fa-solid fa-wallet"></i> Active Wallet Address:</label>
+                  <div class="addr-box">
+                    <span id="wallet-address">Fetching...</span>
+                    <button class="btn-copy" onclick="copyText('wallet-address')" title="Copy Wallet Address">
+                      <i class="fa-regular fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Privacy Model Banner -->
+        <section class="card glass info-banner-card">
+          <div class="banner-content">
+            <i class="fa-solid fa-shield-virus banner-icon"></i>
+            <div>
+              <h3>How Zero-Knowledge Dead-Man's Switch Protects You</h3>
+              <p>Your secret payload is encrypted client-side. The Midnight Compact circuit verifies your heartbeat proofs and secret authorization keys through zero-knowledge witnesses. Even consensus validators cannot see what is inside until the timelock condition triggers.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 2: CREATE VAULT -->
+      <div class="tab-pane" id="tab-create">
+        <section class="card glass form-card">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-lock"></i> Lock Confidential Secret</h2>
+          </div>
+          <div class="card-body">
+            <form id="create-vault-form">
+              <div class="form-group">
+                <label for="vault-secret">Secret Payload (Seed Phrase, Private Key, Confidential Will, or Credentials):</label>
+                <textarea id="vault-secret" rows="4" placeholder="Enter the confidential secret to be guarded by Midnight ZK circuit..." required></textarea>
+                <span class="input-hint"><i class="fa-solid fa-eye-slash"></i> Encrypted locally. Disclosed only to beneficiary upon timelock expiry.</span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="vault-beneficiary">Beneficiary Midnight Address:</label>
+                  <input type="text" id="vault-beneficiary" placeholder="mn_addr_preprod1..." required>
+                </div>
+                <div class="form-group">
+                  <label for="vault-duration">Inactivity Threshold (Hours):</label>
+                  <input type="number" id="vault-duration" value="72" min="1" max="8760" required>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-large" id="btn-create-vault">
+                <span class="btn-text"><i class="fa-solid fa-lock"></i> Commit Secret to ZK Vault</span>
+                <span class="btn-loader hidden"><i class="fa-solid fa-spinner fa-spin"></i> Generating Proof...</span>
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 3: ZK HEARTBEAT -->
+      <div class="tab-pane" id="tab-heartbeat">
+        <section class="card glass heartbeat-card">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-heart-pulse"></i> Zero-Knowledge Liveness Attestation</h2>
+          </div>
+          <div class="card-body text-center">
+            <div class="heartbeat-pulse-container">
+              <div class="pulse-ring"></div>
+              <i class="fa-solid fa-heart-pulse pulse-icon"></i>
+            </div>
+            <h3>Prove You Are Alive Without Revealing Identity</h3>
+            <p class="heartbeat-desc">Submitting a heartbeat resets the inactivity countdown timer on your vault. This executes the Compact <code>heartbeat()</code> circuit and increments the verified on-chain counter.</p>
+
+            <div class="hb-stats-row">
+              <div class="stat-pill">
+                <span>Verified Heartbeats:</span>
+                <strong id="hb-counter-disp">0</strong>
+              </div>
+              <div class="stat-pill">
+                <span>Status:</span>
+                <strong id="hb-status-disp" class="text-success">Secured</strong>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-large" id="btn-send-heartbeat">
+              <span class="btn-text"><i class="fa-solid fa-bolt"></i> Send ZK Heartbeat Now</span>
+              <span class="btn-loader hidden"><i class="fa-solid fa-spinner fa-spin"></i> Proving Liveness...</span>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 4: CLAIM / REVOKE -->
+      <div class="tab-pane" id="tab-claim">
+        <div class="grid-2col">
+          <!-- Beneficiary Claim Card -->
+          <section class="card glass">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-key"></i> Beneficiary Emergency Claim</h2>
+            </div>
+            <div class="card-body">
+              <p class="card-intro">If the vault owner misses the inactivity window, the designated beneficiary can execute the <code>claimVault()</code> circuit to reveal the confidential payload.</p>
+              
+              <button class="btn btn-secondary btn-full" id="btn-claim-vault">
+                <span class="btn-text"><i class="fa-solid fa-box-open"></i> Execute Emergency Claim</span>
+                <span class="btn-loader hidden"><i class="fa-solid fa-spinner fa-spin"></i> Unlocking...</span>
+              </button>
+
+              <div id="claim-result-box" class="claim-result-box hidden">
+                <h4><i class="fa-solid fa-unlock-keyhole"></i> Decrypted Secret Payload:</h4>
+                <div class="secret-reveal" id="revealed-secret-text">...</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Owner Revocation Card -->
+          <section class="card glass danger-card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-ban"></i> Revoke & Purge Vault</h2>
+            </div>
+            <div class="card-body">
+              <p class="card-intro">Need to cancel your dead-man's switch? As the vault owner, you can execute the <code>revokeVault()</code> circuit to permanently purge the payload.</p>
+
+              <button class="btn btn-danger btn-full" id="btn-revoke-vault">
+                <span class="btn-text"><i class="fa-solid fa-trash-can"></i> Permanently Revoke Vault</span>
+                <span class="btn-loader hidden"><i class="fa-solid fa-spinner fa-spin"></i> Purging...</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- TAB 5: COMMUNITY FEEDBACK (Level 5) -->
+      <div class="tab-pane" id="tab-feedback">
+        <section class="card glass">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-comments"></i> Builder & Tester Feedback Loop (Level 5)</h2>
+            <button class="btn btn-primary" id="btn-open-feedback-modal">
+              <i class="fa-solid fa-pen-to-square"></i> Submit Feedback
+            </button>
+          </div>
+          <div class="card-body">
+            <p class="feedback-intro">Real-world user feedback is critical for our journey to Midnight Mainnet. Share your experience testing Nocturne Vault on Preprod!</p>
+
+            <div class="feedback-list" id="feedback-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </main>
+
+    <!-- Global Transaction Result Box -->
+    <div id="tx-result-box" class="card glass tx-result-box hidden">
+      <div class="tx-success-header">
+        <i class="fa-solid fa-circle-check"></i>
+        <h4>Zero-Knowledge Proof Verified & Submitted!</h4>
+      </div>
+      <div class="tx-details">
+        <p><strong>Transaction ID:</strong> <span id="tx-id-display">...</span></p>
+        <p><strong>Network:</strong> <span id="tx-net-display">Midnight Preprod</span></p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Powered by <strong>Midnight Network</strong> Zero-Knowledge Technology | Built for Lunar Moonshot Challenge</p>
+    </footer>
+  </div>
+
+  <!-- Feedback Modal Dialog (Level 5) -->
+  <div id="feedback-modal" class="modal-overlay hidden">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-comment-dots"></i> Submit Tester Feedback</h3>
+        <button class="btn-close" id="btn-close-modal">&times;</button>
+      </div>
+      <form id="feedback-form">
+        <div class="form-group">
+          <label for="fb-username">Your Name / Handle:</label>
+          <input type="text" id="fb-username" placeholder="e.g. MidnightBuilder_7" required>
+        </div>
+        <div class="form-group">
+          <label for="fb-category">Feedback Category:</label>
+          <select id="fb-category">
+            <option value="UX">UI / UX Experience</option>
+            <option value="Privacy">ZK Privacy & Security</option>
+            <option value="Feature">Feature Request</option>
+            <option value="Bug">Bug Report</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fb-rating">Experience Rating:</label>
+          <select id="fb-rating">
+            <option value="5">⭐⭐⭐⭐⭐ Outstanding (5/5)</option>
+            <option value="4">⭐⭐⭐⭐ Good (4/5)</option>
+            <option value="3">⭐⭐⭐ Neutral (3/5)</option>
+            <option value="2">⭐⭐ Needs Work (2/5)</option>
+            <option value="1">⭐ Poor (1/5)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fb-message">Your Comments / Suggestions:</label>
+          <textarea id="fb-message" rows="4" placeholder="How did the ZK proof generation and Lace wallet experience feel?" required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-feedback">Submit Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden">Copied to clipboard!</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

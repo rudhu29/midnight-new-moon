@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import * as crypto from 'node:crypto';
+import crypto from 'node:crypto';
 
 const app = express();
 app.use(cors());
@@ -18,7 +18,7 @@ let vaultData = {
   txId: '0x0000000000000000000000000000000000000000000000000000000000000000',
 };
 
-// Level 5 Community Feedback Storage (Serverless In-Memory with Pre-Loaded Tester Reviews)
+// Level 5 Community Feedback Storage
 let communityFeedback = [
   {
     id: 'fb-sample-1',
@@ -198,4 +198,6 @@ app.post('/api/feedback', (req, res) => {
   res.json({ success: true, feedback: newFeedback });
 });
 
-export default app;
+export default function handler(req, res) {
+  return app(req, res);
+}
