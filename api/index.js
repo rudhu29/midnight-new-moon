@@ -1,10 +1,29 @@
 import express from 'express';
 import cors from 'cors';
 import crypto from 'node:crypto';
+import path from 'node:path';
+import fs from 'node:fs';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Serve static assets if requests reach the serverless handler
+app.use(express.static(process.cwd()));
+app.use(express.static(path.join(process.cwd(), 'public')));
+
+// Root route handler for index.html
+app.get(['/', '/index.html'], (req, res) => {
+  const rootIndex = path.resolve(process.cwd(), 'index.html');
+  if (fs.existsSync(rootIndex)) {
+    return res.sendFile(rootIndex);
+  }
+  const publicIndex = path.resolve(process.cwd(), 'public', 'index.html');
+  if (fs.existsSync(publicIndex)) {
+    return res.sendFile(publicIndex);
+  }
+  return res.status(200).send('Nocturne Vault');
+});
 
 // In-Memory Vault State for Serverless Environment
 let vaultData = {

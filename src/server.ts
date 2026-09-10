@@ -23,8 +23,20 @@ globalThis.WebSocket = WebSocket;
 
 const PRIVATE_STATE_ID = 'nocturneVaultPrivateState';
 
-const { network, config: networkConfig } = resolveNetwork();
-const SEED = getOrCreateSeed(network);
+let network = 'preprod';
+let networkConfig: any = null;
+let SEED: any = null;
+
+if (!process.env.VERCEL) {
+  try {
+    const netRes = resolveNetwork();
+    network = netRes.network;
+    networkConfig = netRes.config;
+    SEED = getOrCreateSeed(network);
+  } catch (e) {
+    console.warn('Network seed initialization note:', e);
+  }
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const zkConfigPath = path.resolve(__dirname, '..', 'contracts', 'managed', 'hello-world');
