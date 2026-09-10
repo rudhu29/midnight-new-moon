@@ -8,21 +8,52 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static assets if requests reach the serverless handler
-app.use(express.static(process.cwd()));
-app.use(express.static(path.join(process.cwd(), 'public')));
+function readFileSafe(relPath) {
+  const tryPaths = [
+    path.join(process.cwd(), relPath),
+    path.join(process.cwd(), 'public', relPath),
+    path.resolve(relPath),
+    path.resolve('public', relPath),
+  ];
+  for (const p of tryPaths) {
+    try {
+      if (fs.existsSync(p)) {
+        return fs.readFileSync(p, 'utf8');
+      }
+    } catch (e) {
+      // Ignore read error and try next
+    }
+  }
+  return null;
+}
 
 // Root route handler for index.html
 app.get(['/', '/index.html'], (req, res) => {
-  const rootIndex = path.resolve(process.cwd(), 'index.html');
-  if (fs.existsSync(rootIndex)) {
-    return res.sendFile(rootIndex);
+  const content = readFileSafe('index.html');
+  if (content) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(content);
   }
-  const publicIndex = path.resolve(process.cwd(), 'public', 'index.html');
-  if (fs.existsSync(publicIndex)) {
-    return res.sendFile(publicIndex);
+  return res.status(200).send('<!DOCTYPE html><html><head><title>Nocturne Vault</title></head><body><h1>Nocturne Vault</h1></body></html>');
+});
+
+// Static assets handlers
+app.get('/style.css', (req, res) => {
+  const content = readFileSafe('style.css');
+  if (content) {
+    res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    return res.status(200).send(content);
   }
-  return res.status(200).send('Nocturne Vault');
+  return res.status(404).send('Not Found');
+});
+
+app.get('/app.js', (req, res) => {
+  const content = readFileSafe('app.js');
+  if (content) {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    return res.status(200).send(content);
+  }
+  return res.status(404).send('Not Found');
 });
 
 // In-Memory Vault State for Serverless Environment
@@ -217,6 +248,17 @@ app.post('/api/feedback', (req, res) => {
   res.json({ success: true, feedback: newFeedback });
 });
 
+// Fallback 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint not found', path: req.url });
+});
+
 export default function handler(req, res) {
-  return app(req, res);
+  try {
+    return app(req, res);
+  } catch (err) {
+    console.error('Serverless execution error:', err);
+    return res.status(500).json({ error: 'Internal server error', details: err?.message });
+  }
 }
+
