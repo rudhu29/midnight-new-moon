@@ -14,7 +14,7 @@ import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-pri
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { CompiledContract } from '@midnight-ntwrk/midnight-js-protocol/compact-js';
 
-import { resolveNetwork, getOrCreateSeed, getDeployment } from './network.js';
+import { resolveNetwork, getOrCreateSeed, getDeployment, type NetworkId } from './network.js';
 import { createWallet, persistWalletState, unshieldedToken, type WalletContext } from './wallet.js';
 
 // Enable WebSocket for GraphQL subscriptions
@@ -23,7 +23,7 @@ globalThis.WebSocket = WebSocket;
 
 const PRIVATE_STATE_ID = 'nocturneVaultPrivateState';
 
-let network = 'preprod';
+let network: NetworkId = 'preprod';
 let networkConfig: any = null;
 let SEED: any = null;
 
