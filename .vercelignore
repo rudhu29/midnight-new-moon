@@ -1,9 +1,0 @@
-# Prevent Vercel from detecting and compiling local server/tests as serverless functions
-src/server.ts
-contracts/
-tests/
-scripts/
-docker-compose.yml
-run-setup.sh
-.midnight-state.json
-.midnight-wallet-state/
