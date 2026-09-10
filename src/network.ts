@@ -117,11 +117,16 @@ export function loadState(opts: FsOptions = {}): NetworkState | null {
 }
 
 export function saveState(state: NetworkState, opts: FsOptions = {}): void {
-  const p = statePath(opts);
-  // Write to a sibling tmp file then rename → atomic on POSIX.
-  const tmp = `${p}.tmp-${process.pid}-${Date.now()}`;
-  fs.writeFileSync(tmp, `${JSON.stringify(state, null, 2)}\n`);
-  fs.renameSync(tmp, p);
+  try {
+    const p = statePath(opts);
+    // Write to a sibling tmp file then rename → atomic on POSIX.
+    const tmp = `${p}.tmp-${process.pid}-${Date.now()}`;
+    fs.writeFileSync(tmp, `${JSON.stringify(state, null, 2)}\n`);
+    fs.renameSync(tmp, p);
+  } catch (err) {
+    // Read-only filesystem in serverless environments (e.g. Vercel)
+    console.warn('Could not save state file (read-only filesystem):', (err as Error).message);
+  }
 }
 
 export function parseNetworkFlag(argv: string[]): NetworkId | null {

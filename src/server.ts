@@ -33,12 +33,16 @@ const contractPath = path.join(zkConfigPath, 'contract', 'index.js');
 let HelloWorld: any = null;
 let compiledContract: any = null;
 
-if (fs.existsSync(contractPath)) {
-  HelloWorld = await import(pathToFileURL(contractPath).href);
-  compiledContract = CompiledContract.make('hello-world', HelloWorld.Contract).pipe(
-    CompiledContract.withVacantWitnesses,
-    CompiledContract.withCompiledFileAssets(zkConfigPath),
-  );
+try {
+  if (fs.existsSync(contractPath)) {
+    HelloWorld = await import(pathToFileURL(contractPath).href);
+    compiledContract = CompiledContract.make('hello-world', HelloWorld.Contract).pipe(
+      CompiledContract.withVacantWitnesses,
+      CompiledContract.withCompiledFileAssets(zkConfigPath),
+    );
+  }
+} catch (e) {
+  console.warn('Compiled contract loader note:', e);
 }
 
 const app = express();
@@ -118,7 +122,11 @@ function loadFeedback(): FeedbackEntry[] {
 }
 
 function saveFeedback(list: FeedbackEntry[]): void {
-  fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(list, null, 2), 'utf-8');
+  try {
+    fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(list, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('Could not save feedback to file (read-only filesystem):', err);
+  }
 }
 
 let communityFeedback: FeedbackEntry[] = loadFeedback();
@@ -365,11 +373,15 @@ app.post('/api/feedback', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
-  console.log(`\n🌙 Nocturne Vault Server running on http://localhost:${PORT}`);
-  try {
-    await initMidnight();
-  } catch (err) {
-    console.warn('Devnet auto-connect info: Running in hybrid local mode.');
-  }
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, async () => {
+    console.log(`\n🌙 Nocturne Vault Server running on http://localhost:${PORT}`);
+    try {
+      await initMidnight();
+    } catch (err) {
+      console.warn('Devnet auto-connect info: Running in hybrid local mode.');
+    }
+  });
+}
+
+export default app;
