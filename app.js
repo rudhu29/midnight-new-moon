@@ -1,103 +1,393 @@
 // ==========================================================================
-// Nocturne Vault - Interactive 3D Lunar Engine & ZK Frontend Controller
+// Nocturne Vault - Hyper-Realistic 3D Lunar Engine & ZK Controller
 // ==========================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  // ─── 1. THREE.JS 3D BACKGROUND ENGINE ──────────────────────────────────
+  // ─── 1. AUDIO SYNTHESIS ENGINE (WEB AUDIO API) ─────────────────────────
+  let audioCtx = null;
+  let soundEnabled = true;
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) audioCtx = new AudioContextClass();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function playHeartbeatSound() {
+    if (!soundEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    try {
+      const now = audioCtx.currentTime;
+      // Resonant sub-bass thud (65Hz -> 32Hz)
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(75, now);
+      osc1.frequency.exponentialRampToValueAtTime(32, now + 0.28);
+      gain1.gain.setValueAtTime(0.35, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.35);
+
+      // Electronic harmonic ping
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(360, now + 0.04);
+      osc2.frequency.exponentialRampToValueAtTime(180, now + 0.24);
+      gain2.gain.setValueAtTime(0.12, now + 0.04);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(now + 0.04);
+      osc2.stop(now + 0.26);
+    } catch (e) {}
+  }
+
+  function playSuccessChime() {
+    if (!soundEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    try {
+      const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      freqs.forEach((f, idx) => {
+        const now = audioCtx.currentTime + idx * 0.075;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.5);
+      });
+    } catch (e) {}
+  }
+
+  function playClickSound() {
+    if (!soundEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1200, now);
+      osc.frequency.exponentialRampToValueAtTime(450, now + 0.035);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } catch (e) {}
+  }
+
+  // Sound Toggle Control
+  const btnToggleSound = document.getElementById('btn-toggle-sound');
+  const soundIcon = document.getElementById('sound-icon');
+  if (btnToggleSound && soundIcon) {
+    btnToggleSound.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      if (soundEnabled) {
+        soundIcon.className = 'fa-solid fa-volume-high';
+        playClickSound();
+        showToast('Tactile audio enabled');
+      } else {
+        soundIcon.className = 'fa-solid fa-volume-xmark';
+        showToast('Audio muted');
+      }
+    });
+  }
+
+  // ─── 2. PROCEDURAL REALISTIC LUNAR MAP GENERATOR ───────────────────────
+  function generateRealisticLunarMaps() {
+    const width = 1024;
+    const height = 512;
+
+    const dCanvas = document.createElement('canvas');
+    dCanvas.width = width;
+    dCanvas.height = height;
+    const dCtx = dCanvas.getContext('2d');
+
+    const bCanvas = document.createElement('canvas');
+    bCanvas.width = width;
+    bCanvas.height = height;
+    const bCtx = bCanvas.getContext('2d');
+
+    // Base lunar highland mineral fill
+    dCtx.fillStyle = '#8a8e9e';
+    dCtx.fillRect(0, 0, width, height);
+
+    bCtx.fillStyle = '#808080';
+    bCtx.fillRect(0, 0, width, height);
+
+    // Micro-noise texture for realistic lunar regolith roughness
+    const imgData = dCtx.getImageData(0, 0, width, height);
+    const bumpData = bCtx.getImageData(0, 0, width, height);
+    for (let i = 0; i < imgData.data.length; i += 4) {
+      const noise = (Math.random() - 0.5) * 26;
+      imgData.data[i] = Math.min(255, Math.max(0, imgData.data[i] + noise));
+      imgData.data[i + 1] = Math.min(255, Math.max(0, imgData.data[i + 1] + noise));
+      imgData.data[i + 2] = Math.min(255, Math.max(0, imgData.data[i + 2] + noise));
+
+      bumpData.data[i] = Math.min(255, Math.max(0, bumpData.data[i] + noise * 1.6));
+      bumpData.data[i + 1] = bumpData.data[i];
+      bumpData.data[i + 2] = bumpData.data[i];
+    }
+    dCtx.putImageData(imgData, 0, 0);
+    bCtx.putImageData(bumpData, 0, 0);
+
+    // Lunar Maria (Dark Basalt Plains: Oceanus Procellarum, Mare Tranquillitatis)
+    const maria = [
+      { x: 270, y: 170, rx: 120, ry: 95, color: '#333642' },
+      { x: 430, y: 140, rx: 80, ry: 70, color: '#2d303b' },
+      { x: 550, y: 190, rx: 75, ry: 55, color: '#353945' },
+      { x: 630, y: 220, rx: 85, ry: 60, color: '#323540' },
+      { x: 720, y: 250, rx: 70, ry: 50, color: '#393d48' },
+      { x: 450, y: 290, rx: 80, ry: 60, color: '#363944' },
+      { x: 220, y: 320, rx: 65, ry: 50, color: '#3c404b' },
+    ];
+
+    maria.forEach(m => {
+      const grad = dCtx.createRadialGradient(m.x, m.y, 10, m.x, m.y, Math.max(m.rx, m.ry));
+      grad.addColorStop(0, m.color);
+      grad.addColorStop(0.65, 'rgba(60, 64, 76, 0.7)');
+      grad.addColorStop(1, 'transparent');
+      dCtx.fillStyle = grad;
+      dCtx.beginPath();
+      dCtx.ellipse(m.x, m.y, m.rx, m.ry, 0.2, 0, Math.PI * 2);
+      dCtx.fill();
+
+      // Bump (maria depression)
+      const bGrad = bCtx.createRadialGradient(m.x, m.y, 10, m.x, m.y, Math.max(m.rx, m.ry));
+      bGrad.addColorStop(0, '#555555');
+      bGrad.addColorStop(0.7, '#727272');
+      bGrad.addColorStop(1, '#808080');
+      bCtx.fillStyle = bGrad;
+      bCtx.beginPath();
+      bCtx.ellipse(m.x, m.y, m.rx, m.ry, 0.2, 0, Math.PI * 2);
+      bCtx.fill();
+    });
+
+    // 120+ Detailed Impact Craters with Rims and Shadows
+    for (let c = 0; c < 125; c++) {
+      const cx = Math.random() * width;
+      const cy = Math.random() * height;
+      const r = Math.random() * Math.random() * 26 + 3.5;
+
+      // Ray ejecta for major craters
+      if (r > 13 && Math.random() > 0.45) {
+        dCtx.strokeStyle = 'rgba(235, 242, 255, 0.25)';
+        dCtx.lineWidth = 1;
+        for (let a = 0; a < 8; a++) {
+          const ang = (a / 8) * Math.PI * 2 + Math.random() * 0.25;
+          const len = r * (Math.random() * 3 + 2.2);
+          dCtx.beginPath();
+          dCtx.moveTo(cx, cy);
+          dCtx.lineTo(cx + Math.cos(ang) * len, cy + Math.sin(ang) * len);
+          dCtx.stroke();
+        }
+      }
+
+      // Illuminated Rim (towards upper-right sun)
+      dCtx.strokeStyle = 'rgba(245, 250, 255, 0.85)';
+      dCtx.lineWidth = Math.max(r * 0.2, 1.6);
+      dCtx.beginPath();
+      dCtx.arc(cx, cy, r, -Math.PI * 0.25, Math.PI * 0.65);
+      dCtx.stroke();
+
+      // Shadowed Rim (away from sun)
+      dCtx.strokeStyle = 'rgba(20, 23, 30, 0.9)';
+      dCtx.beginPath();
+      dCtx.arc(cx, cy, r, Math.PI * 0.75, Math.PI * 1.7);
+      dCtx.stroke();
+
+      // Crater interior shadow
+      dCtx.fillStyle = '#1e2129';
+      dCtx.beginPath();
+      dCtx.arc(cx, cy, r * 0.72, 0, Math.PI * 2);
+      dCtx.fill();
+
+      // Bump Map Elevation
+      bCtx.strokeStyle = '#ffffff';
+      bCtx.lineWidth = Math.max(r * 0.22, 2);
+      bCtx.beginPath();
+      bCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      bCtx.stroke();
+
+      bCtx.fillStyle = '#101010';
+      bCtx.beginPath();
+      bCtx.arc(cx, cy, r * 0.68, 0, Math.PI * 2);
+      bCtx.fill();
+
+      // Central peak for large impact basins
+      if (r > 16) {
+        dCtx.fillStyle = 'rgba(240, 245, 255, 0.95)';
+        dCtx.beginPath();
+        dCtx.arc(cx + 1, cy - 1, r * 0.18, 0, Math.PI * 2);
+        dCtx.fill();
+
+        bCtx.fillStyle = '#ffffff';
+        bCtx.beginPath();
+        bCtx.arc(cx + 1, cy - 1, r * 0.18, 0, Math.PI * 2);
+        bCtx.fill();
+      }
+    }
+
+    return { diffuseCanvas: dCanvas, bumpCanvas: bCanvas };
+  }
+
+  // ─── 3. THREE.JS 3D SCENE & CINEMATIC LIGHTING ────────────────────────
   let threeScene, threeCamera, threeRenderer;
-  let lunarCore, lunarWireframe, orbitalRings = [], starField, shockwaveRing;
+  let lunarCore, lunarHalo, orbitalRings = [], starField, shockwaveRing, asteroidDust;
   let mouseX = 0, mouseY = 0, targetCameraX = 0, targetCameraY = 0;
+
+  let isDragging = false;
+  let previousMousePos = { x: 0, y: 0 };
+  let moonVelocity = { x: 0.0003, y: 0.0024 };
 
   function initThreeBackground() {
     const canvas = document.getElementById('bg-3d-canvas');
     if (!canvas || typeof THREE === 'undefined') return;
 
-    // Scene & Camera
     threeScene = new THREE.Scene();
-    threeCamera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-    threeCamera.position.z = 9;
+    threeCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    threeCamera.position.z = 8.5;
 
-    // Renderer
     threeRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     threeRenderer.setSize(window.innerWidth, window.innerHeight);
     threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // 1. Lunar Core Sphere
-    const coreGeo = new THREE.IcosahedronGeometry(2.1, 3);
-    const coreMat = new THREE.MeshBasicMaterial({
-      color: 0x050818,
-      wireframe: false,
+    // Generate Procedural Realistic Lunar Surface
+    const { diffuseCanvas, bumpCanvas } = generateRealisticLunarMaps();
+    const diffuseTex = new THREE.CanvasTexture(diffuseCanvas);
+    const bumpTex = new THREE.CanvasTexture(bumpCanvas);
+
+    // Realistic PBR Moon Sphere
+    const moonGeo = new THREE.SphereGeometry(2.35, 64, 64);
+    const moonMat = new THREE.MeshStandardMaterial({
+      map: diffuseTex,
+      bumpMap: bumpTex,
+      bumpScale: 0.09,
+      roughness: 0.88,
+      metalness: 0.06,
     });
-    lunarCore = new THREE.Mesh(coreGeo, coreMat);
+    lunarCore = new THREE.Mesh(moonGeo, moonMat);
+    lunarCore.rotation.x = 0.116; // 6.68 deg axial tilt
     threeScene.add(lunarCore);
 
-    // 2. Glowing Wireframe Shell (representing ZK lattice)
-    const wireGeo = new THREE.IcosahedronGeometry(2.18, 2);
-    const wireMat = new THREE.MeshBasicMaterial({
+    // Ethereal Outer Halo Atmosphere
+    const haloGeo = new THREE.SphereGeometry(2.42, 48, 48);
+    const haloMat = new THREE.MeshBasicMaterial({
       color: 0x00f2fe,
-      wireframe: true,
       transparent: true,
-      opacity: 0.28,
+      opacity: 0.09,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
     });
-    lunarWireframe = new THREE.Mesh(wireGeo, wireMat);
-    threeScene.add(lunarWireframe);
+    lunarHalo = new THREE.Mesh(haloGeo, haloMat);
+    lunarCore.add(lunarHalo);
 
-    // 3. Orbital ZK Torus Rings (Cryptographic Layers)
-    const ringColors = [0x00f2fe, 0x8a2be2, 0x4facfe];
-    const ringRadii = [3.2, 3.8, 4.4];
-    const ringRotations = [
-      { x: 0.8, y: 0.4, z: 0.2 },
-      { x: -0.6, y: 0.9, z: -0.4 },
-      { x: 1.1, y: -0.5, z: 0.7 }
+    // Directional Sunlight (Casts dramatic crater terminator shadows)
+    const sunLight = new THREE.DirectionalLight(0xfff7e6, 2.7);
+    sunLight.position.set(14, 6, 9);
+    threeScene.add(sunLight);
+
+    // Cyan Neon Rim Light (Midnight cryptographic aesthetic)
+    const rimLight = new THREE.PointLight(0x00f2fe, 1.8, 25);
+    rimLight.position.set(-10, -5, -8);
+    threeScene.add(rimLight);
+
+    // Cosmic Deep Sky Ambient Fill
+    const ambientLight = new THREE.AmbientLight(0x0a0f24, 0.45);
+    threeScene.add(ambientLight);
+
+    // Orbital ZK Cryptographic Torus Rings
+    const ringSpecs = [
+      { r: 3.4, color: 0x00f2fe, rx: 0.8, ry: 0.3, rz: 0.2 },
+      { r: 4.1, color: 0x8a2be2, rx: -0.6, ry: 0.9, rz: -0.4 },
+      { r: 4.8, color: 0x00f5a0, rx: 1.1, ry: -0.5, rz: 0.7 }
     ];
 
-    ringRadii.forEach((r, idx) => {
-      const ringGeo = new THREE.TorusGeometry(r, 0.018, 16, 90);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: ringColors[idx % ringColors.length],
+    ringSpecs.forEach(spec => {
+      const rGeo = new THREE.TorusGeometry(spec.r, 0.016, 16, 100);
+      const rMat = new THREE.MeshBasicMaterial({
+        color: spec.color,
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.32,
       });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.rotation.x = ringRotations[idx].x;
-      ring.rotation.y = ringRotations[idx].y;
-      ring.rotation.z = ringRotations[idx].z;
+      const ring = new THREE.Mesh(rGeo, rMat);
+      ring.rotation.set(spec.rx, spec.ry, spec.rz);
       orbitalRings.push(ring);
       threeScene.add(ring);
 
-      // Add a traveling particle node on each ring
+      // Node particle
       const nodeGeo = new THREE.SphereGeometry(0.065, 8, 8);
       const nodeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
       const node = new THREE.Mesh(nodeGeo, nodeMat);
       ring.add(node);
-      node.position.x = r;
+      node.position.x = spec.r;
     });
 
-    // 4. Starfield Particles
-    const starsCount = 1400;
-    const starsGeo = new THREE.BufferGeometry();
-    const starPositions = new Float32Array(starsCount * 3);
-
-    for (let i = 0; i < starsCount * 3; i += 3) {
-      starPositions[i] = (Math.random() - 0.5) * 60;
-      starPositions[i + 1] = (Math.random() - 0.5) * 60;
-      starPositions[i + 2] = (Math.random() - 0.5) * 45;
+    // Deep Space Starfield Particles
+    const starCount = 1500;
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount * 3; i += 3) {
+      starPos[i] = (Math.random() - 0.5) * 65;
+      starPos[i + 1] = (Math.random() - 0.5) * 65;
+      starPos[i + 2] = (Math.random() - 0.5) * 45;
     }
-
-    starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starsMat = new THREE.PointsMaterial({
-      color: 0x8fc5ff,
-      size: 0.08,
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({
+      color: 0x9dc8ff,
+      size: 0.075,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.7,
     });
-    starField = new THREE.Points(starsGeo, starsMat);
+    starField = new THREE.Points(starGeo, starMat);
     threeScene.add(starField);
 
-    // 5. Dynamic Shockwave Ring
-    const shockGeo = new THREE.RingGeometry(2.2, 2.3, 64);
+    // Orbiting Asteroid / Cryptographic Dust Ring
+    const dustCount = 450;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPos = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
+      const angle = (i / dustCount) * Math.PI * 2;
+      const dist = 3.5 + (Math.random() - 0.5) * 1.5;
+      dustPos[i * 3] = Math.cos(angle) * dist;
+      dustPos[i * 3 + 1] = (Math.random() - 0.5) * 0.4;
+      dustPos[i * 3 + 2] = Math.sin(angle) * dist;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    const dustMat = new THREE.PointsMaterial({
+      color: 0x00f2fe,
+      size: 0.045,
+      transparent: true,
+      opacity: 0.55,
+    });
+    asteroidDust = new THREE.Points(dustGeo, dustMat);
+    asteroidDust.rotation.x = 0.5;
+    threeScene.add(asteroidDust);
+
+    // Dynamic 3D Shockwave Ring
+    const shockGeo = new THREE.RingGeometry(2.35, 2.45, 64);
     const shockMat = new THREE.MeshBasicMaterial({
-      color: 0x00f5a0,
+      color: 0x00f2fe,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0,
@@ -105,30 +395,41 @@ document.addEventListener('DOMContentLoaded', () => {
     shockwaveRing = new THREE.Mesh(shockGeo, shockMat);
     threeScene.add(shockwaveRing);
 
-    // Ambient Lighting
-    const ambLight = new THREE.AmbientLight(0xffffff, 0.4);
-    threeScene.add(ambLight);
+    // Interactive Drag-to-Rotate Events
+    window.addEventListener('mousedown', (e) => {
+      if (['INPUT', 'TEXTAREA', 'BUTTON', 'A', 'SELECT'].includes(e.target.tagName)) return;
+      isDragging = true;
+      previousMousePos = { x: e.clientX, y: e.clientY };
+    });
 
-    // Mouse Tracking
     window.addEventListener('mousemove', (e) => {
       mouseX = (e.clientX / window.innerWidth) * 2 - 1;
       mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
       targetCameraX = mouseX * 0.75;
-      targetCameraY = mouseY * 0.5;
+      targetCameraY = mouseY * 0.45;
+
+      if (isDragging && lunarCore) {
+        const deltaX = e.clientX - previousMousePos.x;
+        const deltaY = e.clientY - previousMousePos.y;
+        lunarCore.rotation.y += deltaX * 0.0055;
+        lunarCore.rotation.x += deltaY * 0.0055;
+        moonVelocity = { x: deltaY * 0.0015, y: deltaX * 0.0015 };
+        previousMousePos = { x: e.clientX, y: e.clientY };
+      }
     });
 
-    // Resize Event
-    window.addEventListener('resize', onWindowResize);
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
 
-    // Animation Loop
+    window.addEventListener('resize', () => {
+      if (!threeCamera || !threeRenderer) return;
+      threeCamera.aspect = window.innerWidth / window.innerHeight;
+      threeCamera.updateProjectionMatrix();
+      threeRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
     animate();
-  }
-
-  function onWindowResize() {
-    if (!threeCamera || !threeRenderer) return;
-    threeCamera.aspect = window.innerWidth / window.innerHeight;
-    threeCamera.updateProjectionMatrix();
-    threeRenderer.setSize(window.innerWidth, window.innerHeight);
   }
 
   let shockwaveActive = false;
@@ -138,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!shockwaveRing) return;
     shockwaveRing.material.color.setHex(color);
     shockwaveRing.scale.set(1, 1, 1);
-    shockwaveRing.material.opacity = 0.9;
+    shockwaveRing.material.opacity = 0.95;
     shockwaveScale = 1;
     shockwaveActive = true;
   };
@@ -146,34 +447,42 @@ document.addEventListener('DOMContentLoaded', () => {
   function animate() {
     requestAnimationFrame(animate);
 
-    // Soft Camera Parallax Easing
+    // Camera Parallax
     threeCamera.position.x += (targetCameraX - threeCamera.position.x) * 0.04;
     threeCamera.position.y += (targetCameraY - threeCamera.position.y) * 0.04;
     threeCamera.lookAt(0, 0, 0);
 
-    // Rotate Lunar Core and Shell
-    if (lunarCore && lunarWireframe) {
-      lunarCore.rotation.y += 0.0025;
-      lunarWireframe.rotation.y -= 0.0035;
-      lunarWireframe.rotation.x += 0.0015;
+    // Moon Physical Inertia & Drift
+    if (lunarCore) {
+      if (!isDragging) {
+        lunarCore.rotation.y += moonVelocity.y;
+        lunarCore.rotation.x += moonVelocity.x;
+        moonVelocity.x *= 0.96;
+        moonVelocity.y = moonVelocity.y * 0.96 + 0.0001; // gentle resting rotation
+      }
     }
 
-    // Rotate Orbital Rings at differential velocities
+    // Orbital Ring Rotations
     orbitalRings.forEach((ring, i) => {
-      ring.rotation.z += 0.004 * (i % 2 === 0 ? 1 : -1);
-      ring.rotation.y += 0.003;
+      ring.rotation.z += 0.0035 * (i % 2 === 0 ? 1 : -1);
+      ring.rotation.y += 0.0025;
     });
 
-    // Slowly drift starfield
-    if (starField) {
-      starField.rotation.y += 0.0004;
+    // Asteroid Dust Drift
+    if (asteroidDust) {
+      asteroidDust.rotation.y += 0.0018;
     }
 
-    // Expand Shockwave if active
+    // Starfield Slow Drift
+    if (starField) {
+      starField.rotation.y += 0.0003;
+    }
+
+    // Shockwave Expansion
     if (shockwaveActive && shockwaveRing) {
-      shockwaveScale += 0.08;
+      shockwaveScale += 0.09;
       shockwaveRing.scale.set(shockwaveScale, shockwaveScale, 1);
-      shockwaveRing.material.opacity *= 0.94;
+      shockwaveRing.material.opacity *= 0.93;
       if (shockwaveRing.material.opacity < 0.02) {
         shockwaveRing.material.opacity = 0;
         shockwaveActive = false;
@@ -185,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initThreeBackground();
 
-  // ─── 2. CONFETTI BURST ENGINE ──────────────────────────────────────────
+  // ─── 4. CONFETTI PARTICLE ENGINE ───────────────────────────────────────
   function triggerConfetti() {
     const canvas = document.getElementById('confetti-canvas');
     if (!canvas) return;
@@ -220,8 +529,8 @@ document.addEventListener('DOMContentLoaded', () => {
           alive = true;
           p.x += p.vx;
           p.y += p.vy;
-          p.vy += 0.35; // gravity
-          p.vx *= 0.98; // drag
+          p.vy += 0.35;
+          p.vx *= 0.98;
           p.alpha -= p.decay;
           p.rotation += p.spin;
 
@@ -245,11 +554,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderConfetti();
   }
 
-  // ─── 3. DOM ELEMENTS & APPLICATION STATE ──────────────────────────────
+  // ─── 5. UI CONTROLS & STATE BINDING ────────────────────────────────────
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabPanes = document.querySelectorAll('.tab-pane');
 
-  const networkNameEl = document.getElementById('network-name');
   const contractAddressEl = document.getElementById('contract-address');
   const walletAddressEl = document.getElementById('wallet-address');
   const tnightBalanceEl = document.getElementById('tnight-balance');
@@ -257,8 +565,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnRefreshBalance = document.getElementById('btn-refresh-balance');
 
   const btnConnectLace = document.getElementById('btn-connect-lace');
+  const btnDisconnectLace = document.getElementById('btn-disconnect-lace');
   const laceBtnText = document.getElementById('lace-btn-text');
+  const laceActiveAddressEl = document.getElementById('lace-active-address');
   let laceAccount = null;
+  let defaultWalletAddress = 'mn_addr_preprod1rjywwgs5zza2uwmsv2pr7qu3c9xgp9f95mq80fw3c35fxg8d0m4qvm7fke';
+  let defaultContractAddress = 'efa5b7c7dc3b7df598665d90bf2e8c73b815a042a94dfab39d8096b946cb0d71';
 
   const badgeVaultState = document.getElementById('badge-vault-state');
   const dispVaultCommitment = document.getElementById('disp-vault-commitment');
@@ -294,9 +606,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCancelModal = document.getElementById('btn-cancel-modal');
   const feedbackForm = document.getElementById('feedback-form');
 
+  const circuitModal = document.getElementById('circuit-modal');
+  const btnOpenCircuitModal = document.getElementById('btn-open-circuit-modal');
+  const btnCloseCircuitModal = document.getElementById('btn-close-circuit-modal');
+  const btnDoneCircuitModal = document.getElementById('btn-done-circuit-modal');
+
   const toast = document.getElementById('toast');
 
-  // Toast Helper
   function showToast(message) {
     if (!toast) return;
     toast.textContent = message;
@@ -308,8 +624,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2800);
   }
 
-  // Global Copy Helper
   window.copyText = function(elementId) {
+    playClickSound();
     const el = document.getElementById(elementId);
     if (!el) return;
     const text = el.getAttribute('data-full-address') || el.textContent || '';
@@ -322,8 +638,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Tab Navigation with 3D Shockwave Micro-Interaction
   window.switchTab = function(tabId) {
+    playClickSound();
     tabButtons.forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
     });
@@ -342,9 +658,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Demo Preset Auto-Filler
+  // Demo Preset Button
   if (btnFillDemo) {
     btnFillDemo.addEventListener('click', () => {
+      playClickSound();
       vaultSecretInput.value = 'MIDNIGHT-PREPROD-CONFIDENTIAL-SEED: 0x9f8e7d6c5b4a3210-zk-secret-will';
       vaultBeneficiaryInput.value = 'mn_addr_preprod1_lunar_beneficiary_switch_77';
       vaultDurationInput.value = '48';
@@ -353,7 +670,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ─── 4. API & NETWORK SYNCHRONIZATION ──────────────────────────────────
+  // Circuit Modal Wiring
+  if (btnOpenCircuitModal && circuitModal) {
+    btnOpenCircuitModal.addEventListener('click', () => {
+      playClickSound();
+      circuitModal.classList.remove('hidden');
+      if (window.trigger3DShockwave) window.trigger3DShockwave(0x8a2be2);
+    });
+  }
+  function closeCircuitModal() {
+    if (circuitModal) circuitModal.classList.add('hidden');
+  }
+  if (btnCloseCircuitModal) btnCloseCircuitModal.addEventListener('click', closeCircuitModal);
+  if (btnDoneCircuitModal) btnDoneCircuitModal.addEventListener('click', closeCircuitModal);
+
+  // Live Block Height Simulation
+  let currentBlockHeight = 1048328;
+  setInterval(() => {
+    currentBlockHeight += Math.floor(Math.random() * 2) + 1;
+    const el = document.getElementById('live-block-height');
+    if (el) el.textContent = currentBlockHeight.toLocaleString();
+  }, 18000);
+
+  // ─── 6. API & NETWORK SYNCHRONIZATION ──────────────────────────────────
   async function fetchNetworkStatus() {
     try {
       const res = await fetch('/api/status');
@@ -391,12 +730,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnRefreshBalance) {
     btnRefreshBalance.addEventListener('click', () => {
+      playClickSound();
       fetchBalances();
       if (window.trigger3DShockwave) window.trigger3DShockwave(0x00f2fe);
     });
   }
 
-  // ─── 5. VAULT STATE REFRESH ─────────────────────────────────────────────
+  // ─── 7. VAULT STATE REFRESH ─────────────────────────────────────────────
   async function fetchVaultState() {
     try {
       const res = await fetch('/api/vault');
@@ -438,18 +778,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ─── 6. LACE WALLET CONNECTION (LEVEL 2) ───────────────────────────────
+  // ─── 8. LACE WALLET CONNECTION & DISCONNECT (LEVEL 2) ───────────────────
+  function disconnectLaceWallet() {
+    playClickSound();
+    laceAccount = null;
+    laceBtnText.textContent = 'Connect Lace Wallet';
+    btnConnectLace.classList.remove('connected');
+    if (btnDisconnectLace) btnDisconnectLace.classList.add('hidden');
+
+    if (laceActiveAddressEl) {
+      laceActiveAddressEl.textContent = 'Not Connected (Click "Connect Lace Wallet")';
+      laceActiveAddressEl.classList.add('text-muted');
+      laceActiveAddressEl.removeAttribute('data-full-address');
+    }
+
+    if (walletAddressEl && defaultWalletAddress) {
+      walletAddressEl.textContent = defaultWalletAddress.slice(0, 20) + '...' + defaultWalletAddress.slice(-8);
+      walletAddressEl.setAttribute('data-full-address', defaultWalletAddress);
+    }
+    showToast('Midnight Lace Wallet disconnected');
+  }
+
+  if (btnDisconnectLace) {
+    btnDisconnectLace.addEventListener('click', (e) => {
+      e.stopPropagation();
+      disconnectLaceWallet();
+    });
+  }
+
   if (btnConnectLace) {
     btnConnectLace.addEventListener('click', async () => {
+      playClickSound();
+
+      // If already connected, inform user of active connection
+      if (laceAccount) {
+        showToast(`Connected: ${laceAccount.slice(0, 14)}...${laceAccount.slice(-6)} (Midnight Preprod)`);
+        return;
+      }
+
       try {
         const midnight = window?.midnight;
         if (!midnight || !midnight.mnLace) {
-          showToast('Lace Wallet extension not found. Opening Lace info...');
+          showToast('Midnight Lace Wallet extension not detected. Opening lace.io...');
           window.open('https://www.lace.io/', '_blank');
           return;
         }
 
-        laceBtnText.textContent = 'Connecting...';
+        laceBtnText.textContent = 'Authorizing...';
         const lace = await midnight.mnLace.enable();
         const accounts = await lace.getAccounts();
 
@@ -458,26 +833,45 @@ document.addEventListener('DOMContentLoaded', () => {
           const shortAddr = laceAccount.slice(0, 14) + '...' + laceAccount.slice(-6);
           laceBtnText.textContent = shortAddr;
           btnConnectLace.classList.add('connected');
+          if (btnDisconnectLace) btnDisconnectLace.classList.remove('hidden');
+
+          if (laceActiveAddressEl) {
+            laceActiveAddressEl.textContent = shortAddr;
+            laceActiveAddressEl.setAttribute('data-full-address', laceAccount);
+            laceActiveAddressEl.classList.remove('text-muted');
+          }
+
           if (walletAddressEl) {
             walletAddressEl.textContent = shortAddr;
             walletAddressEl.setAttribute('data-full-address', laceAccount);
           }
-          showToast('Lace Wallet connected to Preprod!');
+
+          playSuccessChime();
+          showToast('Lace Wallet connected to Midnight Preprod!');
           triggerConfetti();
           if (window.trigger3DShockwave) window.trigger3DShockwave(0x00f5a0);
+        } else {
+          laceBtnText.textContent = 'Connect Lace Wallet';
+          showToast('No accounts found in Lace. Please select a Preprod account.');
         }
       } catch (err) {
         console.error('Lace connection error:', err);
         laceBtnText.textContent = 'Connect Lace Wallet';
-        showToast('Lace connection cancelled or failed');
+        const msg = err?.message || '';
+        if (err?.code === 4001 || msg.toLowerCase().includes('reject') || msg.toLowerCase().includes('cancel') || msg.toLowerCase().includes('denied')) {
+          showToast('Lace connection request was rejected by user.');
+        } else {
+          showToast('Lace connection notice: ' + (msg || 'Extension busy or unavailable'));
+        }
       }
     });
   }
 
-  // ─── 7. CIRCUIT 1: CREATE VAULT ─────────────────────────────────────────
+  // ─── 9. CIRCUIT 1: CREATE VAULT ─────────────────────────────────────────
   if (createVaultForm) {
     createVaultForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      playClickSound();
       const secret = vaultSecretInput.value.trim();
       const beneficiary = vaultBeneficiaryInput.value.trim();
       const durationHours = Number(vaultDurationInput.value) || 72;
@@ -486,11 +880,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const btnText = btnCreateVault.querySelector('.btn-text');
       const btnLoader = btnCreateVault.querySelector('.btn-loader');
-      btnText.classList.add('hidden');
+      btnText.textContent = 'Generating ZK Proof...';
       btnLoader.classList.remove('hidden');
       btnCreateVault.disabled = true;
 
       try {
+        showToast('🔐 Step 1/3: Deriving owner commitment & proving witness...');
+        await new Promise(r => setTimeout(r, 450));
+        btnText.textContent = 'Submitting to Preprod...';
+        showToast('⚡ Step 2/3: Submitting proof to Midnight Preprod consensus...');
+
         const res = await fetch('/api/vault/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -500,7 +899,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (data.success) {
           showTxResult(data.txId, 'Midnight Preprod');
-          showToast('🎉 ZK Vault Created & Locked On-Chain!');
+          playSuccessChime();
+          showToast('🎉 Step 3/3: ZK Vault Created & Confirmed On-Chain!');
           triggerConfetti();
           if (window.trigger3DShockwave) window.trigger3DShockwave(0x00f2fe);
           await fetchVaultState();
@@ -519,9 +919,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ─── 8. CIRCUIT 2: ZK HEARTBEAT ─────────────────────────────────────────
+  // ─── 10. CIRCUIT 2: ZK HEARTBEAT ────────────────────────────────────────
   if (btnSendHeartbeat) {
     btnSendHeartbeat.addEventListener('click', async () => {
+      playHeartbeatSound();
       const btnText = btnSendHeartbeat.querySelector('.btn-text');
       const btnLoader = btnSendHeartbeat.querySelector('.btn-loader');
       btnText.classList.add('hidden');
@@ -534,6 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (data.success) {
           showTxResult(data.txId, 'Midnight Preprod');
+          playSuccessChime();
           showToast(`⚡ Heartbeat #${data.heartbeats} verified! Inactivity timer reset.`);
           triggerConfetti();
           if (window.trigger3DShockwave) window.trigger3DShockwave(0x00f5a0);
@@ -552,9 +954,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ─── 9. CIRCUIT 3: CLAIM VAULT ──────────────────────────────────────────
+  // ─── 11. CIRCUIT 3: CLAIM VAULT ─────────────────────────────────────────
   if (btnClaimVault) {
     btnClaimVault.addEventListener('click', async () => {
+      playClickSound();
       const btnText = btnClaimVault.querySelector('.btn-text');
       const btnLoader = btnClaimVault.querySelector('.btn-loader');
       btnText.classList.add('hidden');
@@ -569,6 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showTxResult(data.txId, 'Midnight Preprod');
           revealedSecretText.textContent = data.revealedSecret || 'No secret disclosed.';
           claimResultBox.classList.remove('hidden');
+          playSuccessChime();
           showToast('🔓 Compact disclose() executed! Secret Revealed.');
           triggerConfetti();
           if (window.trigger3DShockwave) window.trigger3DShockwave(0xffbe0b);
@@ -586,9 +990,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ─── 10. CIRCUIT 4: REVOKE VAULT ────────────────────────────────────────
+  // ─── 12. CIRCUIT 4: REVOKE VAULT ────────────────────────────────────────
   if (btnRevokeVault) {
     btnRevokeVault.addEventListener('click', async () => {
+      playClickSound();
       if (!confirm('Are you sure you want to permanently revoke and purge this vault?')) {
         return;
       }
@@ -624,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ─── 11. TRANSACTION RECEIPT DISPLAY ───────────────────────────────────
+  // ─── 13. TRANSACTION RECEIPT DISPLAY ────────────────────────────────────
   function showTxResult(txId, network) {
     if (!txResultBox) return;
     txIdDisplay.textContent = txId || '0x' + Math.random().toString(16).slice(2);
@@ -633,7 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
     txResultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  // ─── 12. COMMUNITY FEEDBACK LOOP (LEVEL 5) ─────────────────────────────
+  // ─── 14. COMMUNITY FEEDBACK LOOP (LEVEL 5) ──────────────────────────────
   async function fetchFeedback() {
     try {
       const res = await fetch('/api/feedback');
@@ -678,6 +1083,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnOpenFeedback && feedbackModal) {
     btnOpenFeedback.addEventListener('click', () => {
+      playClickSound();
       feedbackModal.classList.remove('hidden');
     });
   }
@@ -692,6 +1098,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (feedbackForm) {
     feedbackForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      playClickSound();
       const username = document.getElementById('fb-username').value.trim();
       const category = document.getElementById('fb-category').value;
       const rating = Number(document.getElementById('fb-rating').value);
@@ -708,6 +1115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const data = await res.json();
         if (data.success) {
+          playSuccessChime();
           showToast('Thank you! Feedback recorded on-chain.');
           closeFeedbackModal();
           feedbackForm.reset();

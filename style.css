@@ -906,6 +906,39 @@ textarea {
   box-shadow: 0 0 15px rgba(0, 245, 160, 0.25);
 }
 
+.wallet-control-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-disconnect {
+  background: rgba(255, 51, 102, 0.15);
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  color: #ff4d6d;
+  padding: 0.6rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-disconnect:hover {
+  background: rgba(255, 51, 102, 0.35);
+  border-color: #ff3366;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 51, 102, 0.3);
+}
+
+.btn-disconnect.hidden {
+  display: none !important;
+}
+
 .btn-outline-demo {
   background: rgba(255, 190, 11, 0.08);
   border: 1px solid rgba(255, 190, 11, 0.3);
@@ -1412,6 +1445,141 @@ textarea {
 
   .header-controls {
     width: 100%;
+    flex-wrap: wrap;
     justify-content: space-between;
   }
 }
+
+/* Telemetry & Audio Controls */
+.telemetry-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.95rem;
+  background: rgba(14, 18, 38, 0.7);
+  border: 1px solid rgba(0, 242, 254, 0.2);
+  border-radius: 30px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.telemetry-chip i {
+  color: var(--accent-cyan);
+}
+
+.telemetry-chip strong {
+  font-family: var(--font-mono);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-tertiary {
+  background: rgba(138, 43, 226, 0.15);
+  border: 1px solid rgba(138, 43, 226, 0.35);
+  color: #c499ff;
+}
+
+.btn-tertiary:hover {
+  background: rgba(138, 43, 226, 0.28);
+  border-color: #c499ff;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* ZK Circuit Modal & Code Preview */
+.modal-wide {
+  max-width: 780px !important;
+  width: 95% !important;
+}
+
+.circuit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.circuit-stat-card {
+  padding: 1.1rem;
+  background: rgba(10, 13, 26, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+.circuit-name {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.circuit-metric {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.2rem;
+}
+
+.circuit-metric code {
+  font-family: var(--font-mono);
+  color: var(--accent-violet);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.circuit-status {
+  font-size: 0.76rem;
+  color: var(--accent-emerald);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+.circuit-code-preview {
+  background: rgba(6, 8, 16, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.code-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.compact-ver {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-gold);
+  background: rgba(255, 190, 11, 0.1);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+}
+
+.code-block {
+  padding: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #a5d6ff;
+  overflow-x: auto;
+}
+
+@media (max-width: 650px) {
+  .circuit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

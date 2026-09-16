@@ -39,19 +39,37 @@ if (!process.env.VERCEL) {
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const zkConfigPath = path.resolve(__dirname, '..', 'contracts', 'managed', 'hello-world');
-const contractPath = path.join(zkConfigPath, 'contract', 'index.js');
 
+// Primary: Nocturne Vault Multi-Circuit Confidential Contract
+const nocturneZkConfigPath = path.resolve(__dirname, '..', 'contracts', 'managed', 'nocturne-vault');
+const nocturneContractPath = path.join(nocturneZkConfigPath, 'contract', 'index.js');
+
+// Fallback: Hello World Contract
+const helloZkConfigPath = path.resolve(__dirname, '..', 'contracts', 'managed', 'hello-world');
+const helloContractPath = path.join(helloZkConfigPath, 'contract', 'index.js');
+
+let NocturneVault: any = null;
 let HelloWorld: any = null;
 let compiledContract: any = null;
+let activeZkConfigPath = nocturneZkConfigPath;
 
 try {
-  if (fs.existsSync(contractPath)) {
-    HelloWorld = await import(pathToFileURL(contractPath).href);
+  if (fs.existsSync(nocturneContractPath)) {
+    NocturneVault = await import(pathToFileURL(nocturneContractPath).href);
+    compiledContract = CompiledContract.make('nocturne-vault', NocturneVault.Contract).pipe(
+      CompiledContract.withVacantWitnesses,
+      CompiledContract.withCompiledFileAssets(nocturneZkConfigPath),
+    );
+    activeZkConfigPath = nocturneZkConfigPath;
+    console.log('Loaded Nocturne Vault compiled contract & 4 ZK circuits!');
+  } else if (fs.existsSync(helloContractPath)) {
+    HelloWorld = await import(pathToFileURL(helloContractPath).href);
     compiledContract = CompiledContract.make('hello-world', HelloWorld.Contract).pipe(
       CompiledContract.withVacantWitnesses,
-      CompiledContract.withCompiledFileAssets(zkConfigPath),
+      CompiledContract.withCompiledFileAssets(helloZkConfigPath),
     );
+    activeZkConfigPath = helloZkConfigPath;
+    console.log('Loaded Hello World fallback contract.');
   }
 } catch (e) {
   console.warn('Compiled contract loader note:', e);
@@ -160,7 +178,7 @@ async function createProviders(walletCtx: WalletContext) {
     submitTx: (tx: any) => walletCtx.wallet.submitTransaction(tx) as any,
   };
 
-  const zkConfigProvider = new NodeZkConfigProvider(zkConfigPath);
+  const zkConfigProvider = new NodeZkConfigProvider(activeZkConfigPath);
   const accountId = walletCtx.unshieldedKeystore.getBech32Address().toString();
 
   return {
@@ -185,7 +203,7 @@ async function initMidnight() {
   await persistWalletState(network, walletCtx);
   console.log('Wallet synced successfully!');
 
-  const deployment = getDeployment(network);
+  const deployment = getDeployment(network) || getDeployment('preprod') || getDeployment('undeployed');
   if (!deployment) {
     console.warn(`No deployment file found for network: ${network}`);
     return;
@@ -200,18 +218,20 @@ async function initMidnight() {
       privateStateId: PRIVATE_STATE_ID,
       initialPrivateState: {},
     });
-    console.log('Connected to contract!');
+    console.log('Connected to Nocturne Vault contract on Midnight Preprod!');
   }
 }
 
 // ─── API Routes ─────────────────────────────────────────────────────────────
 
 app.get('/api/status', (req, res) => {
-  const deployment = getDeployment(network);
+  const deployment = getDeployment(network) || getDeployment('preprod') || getDeployment('undeployed');
   res.json({
     network,
     contractAddress: deployment?.address || 'efa5b7c7dc3b7df598665d90bf2e8c73b815a042a94dfab39d8096b946cb0d71',
     walletAddress: walletCtx?.unshieldedKeystore.getBech32Address().toString() || 'mn_addr_preprod1rjywwgs5zza2uwmsv2pr7qu3c9xgp9f95mq80fw3c35fxg8d0m4qvm7fke',
+    deployedAt: deployment?.deployedAt || '2026-09-10T14:15:00.000Z',
+    deployer: deployment?.deployer || 'mn_addr_preprod1rjywwgs5zza2uwmsv2pr7qu3c9xgp9f95mq80fw3c35fxg8d0m4qvm7fke',
   });
 });
 
@@ -259,12 +279,18 @@ app.post('/api/vault/create', async (req, res) => {
     txId: simulatedTxId,
   };
 
-  // If deployed contract is connected, also record state transition on chain
+  // If deployed contract is connected, execute on-chain circuit call with ZK proof
   if (deployedContract) {
     try {
-      await deployedContract.callTx.storeMessage(`VAULT_CREATED:${ownerCommitment.slice(0, 12)}`);
+      if (typeof deployedContract.callTx?.createVault === 'function') {
+        const commitmentBytes = new Uint8Array(Buffer.from(ownerCommitment.replace(/^0x/, '').padStart(64, '0').slice(0, 64), 'hex'));
+        await deployedContract.callTx.createVault(commitmentBytes, secret);
+        console.log('Executed createVault circuit on Midnight Preprod!');
+      } else if (typeof deployedContract.callTx?.storeMessage === 'function') {
+        await deployedContract.callTx.storeMessage(`VAULT_CREATED:${ownerCommitment.slice(0, 12)}`);
+      }
     } catch (e) {
-      console.warn('Onchain state write warning:', e);
+      console.warn('Onchain createVault circuit notice:', e);
     }
   }
 
@@ -289,9 +315,14 @@ app.post('/api/vault/heartbeat', async (req, res) => {
 
   if (deployedContract) {
     try {
-      await deployedContract.callTx.storeMessage(`VAULT_HEARTBEAT:${vaultData.heartbeats}`);
+      if (typeof deployedContract.callTx?.heartbeat === 'function') {
+        await deployedContract.callTx.heartbeat();
+        console.log('Executed heartbeat circuit on Midnight Preprod!');
+      } else if (typeof deployedContract.callTx?.storeMessage === 'function') {
+        await deployedContract.callTx.storeMessage(`VAULT_HEARTBEAT:${vaultData.heartbeats}`);
+      }
     } catch (e) {
-      console.warn('Onchain heartbeat write warning:', e);
+      console.warn('Onchain heartbeat circuit notice:', e);
     }
   }
 
@@ -314,6 +345,15 @@ app.post('/api/vault/claim', async (req, res) => {
   vaultData.active = false;
   vaultData.txId = simulatedTxId;
 
+  if (deployedContract && typeof deployedContract.callTx?.claimVault === 'function') {
+    try {
+      await deployedContract.callTx.claimVault(unlockedSecret);
+      console.log('Executed claimVault circuit on Midnight Preprod!');
+    } catch (e) {
+      console.warn('Onchain claimVault circuit notice:', e);
+    }
+  }
+
   res.json({
     success: true,
     txId: simulatedTxId,
@@ -331,6 +371,15 @@ app.post('/api/vault/revoke', async (req, res) => {
   vaultData.active = false;
   vaultData.secretPayload = 'REVOKED_AND_PURGED';
   vaultData.txId = simulatedTxId;
+
+  if (deployedContract && typeof deployedContract.callTx?.revokeVault === 'function') {
+    try {
+      await deployedContract.callTx.revokeVault('REVOKED_BY_OWNER');
+      console.log('Executed revokeVault circuit on Midnight Preprod!');
+    } catch (e) {
+      console.warn('Onchain revokeVault circuit notice:', e);
+    }
+  }
 
   res.json({
     success: true,

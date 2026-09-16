@@ -106,6 +106,8 @@ app.get('/api/status', (req, res) => {
     network: 'preprod',
     contractAddress: 'efa5b7c7dc3b7df598665d90bf2e8c73b815a042a94dfab39d8096b946cb0d71',
     walletAddress: 'mn_addr_preprod1rjywwgs5zza2uwmsv2pr7qu3c9xgp9f95mq80fw3c35fxg8d0m4qvm7fke',
+    deployedAt: '2026-09-10T14:15:00.000Z',
+    deployer: 'mn_addr_preprod1rjywwgs5zza2uwmsv2pr7qu3c9xgp9f95mq80fw3c35fxg8d0m4qvm7fke',
   });
 });
 

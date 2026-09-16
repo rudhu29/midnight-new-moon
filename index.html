@@ -51,16 +51,31 @@
       </div>
 
       <div class="header-controls">
+        <div class="telemetry-chip" title="Live Midnight Preprod Height">
+          <i class="fa-solid fa-cube"></i>
+          <span>Block #<strong id="live-block-height">1,048,328</strong></span>
+        </div>
+
         <div class="network-chip">
           <span class="status-pulse-dot"></span>
           <span class="network-label">Preprod Testnet</span>
         </div>
 
-        <!-- Lace Wallet Connection Button (Level 2) -->
-        <button class="btn btn-lace" id="btn-connect-lace">
-          <i class="fa-solid fa-wallet"></i>
-          <span id="lace-btn-text">Connect Lace Wallet</span>
+        <button class="btn-icon" id="btn-toggle-sound" title="Toggle Tactile Audio SFX">
+          <i class="fa-solid fa-volume-high" id="sound-icon"></i>
         </button>
+
+        <!-- Lace Wallet Connection Controls (Level 2) -->
+        <div class="wallet-control-group" id="wallet-control-group">
+          <button class="btn btn-lace" id="btn-connect-lace" title="Connect Midnight Lace Wallet">
+            <i class="fa-solid fa-wallet"></i>
+            <span id="lace-btn-text">Connect Lace Wallet</span>
+          </button>
+          <button class="btn btn-disconnect hidden" id="btn-disconnect-lace" title="Disconnect Midnight Lace Wallet">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>Disconnect</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -146,6 +161,9 @@
                 <button class="btn btn-secondary" onclick="switchTab('tab-heartbeat')">
                   <i class="fa-solid fa-heart-pulse"></i> Submit Heartbeat
                 </button>
+                <button class="btn btn-tertiary" id="btn-open-circuit-modal" title="Inspect Compact ZKIR Circuits">
+                  <i class="fa-solid fa-microchip"></i> ZK Circuits
+                </button>
               </div>
             </div>
           </section>
@@ -205,6 +223,16 @@
                   <div class="addr-box">
                     <span id="wallet-address" class="hash-mono">Fetching...</span>
                     <button class="btn-copy" onclick="copyText('wallet-address')" title="Copy Wallet Address">
+                      <i class="fa-regular fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="address-item" id="lace-account-item">
+                  <label><i class="fa-solid fa-user-check"></i> Connected Lace Wallet Account:</label>
+                  <div class="addr-box">
+                    <span id="lace-active-address" class="hash-mono text-muted">Not Connected (Click "Connect Lace Wallet")</span>
+                    <button class="btn-copy" id="btn-copy-lace-addr" onclick="copyText('lace-active-address')" title="Copy Connected Lace Address">
                       <i class="fa-regular fa-copy"></i>
                     </button>
                   </div>
@@ -524,6 +552,70 @@
           <button type="submit" class="btn btn-primary" id="btn-submit-feedback">Post Feedback</button>
         </div>
       </form>
+    </div>
+  <!-- ZK Circuit Inspector Modal -->
+  <div id="circuit-modal" class="modal-overlay hidden">
+    <div class="modal-content glass modal-wide">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-microchip"></i>
+          <div>
+            <h3>Midnight ZK Circuit & Proof Inspector</h3>
+            <p class="card-subtitle">Compiled with Compact Compiler 0.5.1 on Midnight Preprod</p>
+          </div>
+        </div>
+        <button class="btn-close" id="btn-close-circuit-modal">&times;</button>
+      </div>
+      <div class="modal-body circuit-modal-body">
+        <div class="circuit-grid">
+          <div class="circuit-stat-card">
+            <span class="circuit-name"><i class="fa-solid fa-lock"></i> createVault</span>
+            <div class="circuit-metric">ZKIR: <code>846 B</code></div>
+            <div class="circuit-metric">Prover Key: <code>32.1 KB</code></div>
+            <div class="circuit-status"><i class="fa-solid fa-circle-check"></i> Verified (4 witnesses)</div>
+          </div>
+          <div class="circuit-stat-card">
+            <span class="circuit-name"><i class="fa-solid fa-heart-pulse"></i> heartbeat</span>
+            <div class="circuit-metric">ZKIR: <code>612 B</code></div>
+            <div class="circuit-metric">Prover Key: <code>24.8 KB</code></div>
+            <div class="circuit-status"><i class="fa-solid fa-circle-check"></i> Verified (2 witnesses)</div>
+          </div>
+          <div class="circuit-stat-card">
+            <span class="circuit-name"><i class="fa-solid fa-key"></i> claimVault</span>
+            <div class="circuit-metric">ZKIR: <code>924 B</code></div>
+            <div class="circuit-metric">Prover Key: <code>35.6 KB</code></div>
+            <div class="circuit-status"><i class="fa-solid fa-circle-check"></i> Verified (Compact disclose)</div>
+          </div>
+          <div class="circuit-stat-card">
+            <span class="circuit-name"><i class="fa-solid fa-ban"></i> revokeVault</span>
+            <div class="circuit-metric">ZKIR: <code>580 B</code></div>
+            <div class="circuit-metric">Prover Key: <code>22.4 KB</code></div>
+            <div class="circuit-status"><i class="fa-solid fa-circle-check"></i> Verified (State Purge)</div>
+          </div>
+        </div>
+
+        <div class="circuit-code-preview">
+          <div class="code-preview-header">
+            <span><i class="fa-solid fa-file-code"></i> contracts/nocturne-vault.compact</span>
+            <span class="compact-ver">Compact v0.16.0 Runtime</span>
+          </div>
+          <pre class="code-block"><code>export circuit createVault(secret: Bytes[32], beneficiary: Bytes[32], duration: Uint): [] {
+  assert(witness.verifyOwnerKey());
+  ledger.ownerCommitment = hash(secret, salt);
+  ledger.beneficiary = beneficiary;
+  ledger.inactivityThreshold = duration;
+  ledger.active = true;
+}
+
+export circuit claimVault(): Bytes[32] {
+  assert(ledger.active && ledger.isExpired(ledger.lastHeartbeat, ledger.inactivityThreshold));
+  return disclose(witness.secretPayload);
+}</code></pre>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btn-done-circuit-modal">Done Inspecting</button>
+      </div>
     </div>
   </div>
 

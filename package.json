@@ -6,6 +6,8 @@
   "author": "",
   "license": "MIT",
   "scripts": {
+    "dev": "tsx src/server.ts",
+    "start": "node api/index.js",
     "compile": "wsl bash -c \"cd /home/rudra/new-moon-app && export PATH='/home/rudra/.local/bin:\\$PATH' && npm run compile && rsync -av --delete /home/rudra/new-moon-app/contracts/managed/ ./contracts/managed/\"",
     "build": "echo Build succeeded",
     "setup": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run setup && cp /home/rudra/new-moon-app/.midnight-state.json ./.midnight-state.json && rsync -av --delete /home/rudra/new-moon-app/.midnight-wallet-state/ ./.midnight-wallet-state/\"",

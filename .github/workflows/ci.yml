@@ -8,7 +8,7 @@ on:
 
 jobs:
   test-and-verify:
-    name: Test & ZK Verification
+    name: Test, Compact Compile & ZK Verification
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +23,18 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci || npm install
+
+      - name: Install Compact Compiler Toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Compile Compact Contracts
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          compact --version
+          compact compile -- contracts/nocturne-vault.compact contracts/managed/nocturne-vault
+          echo "Compact compilation of nocturne-vault.compact completed successfully!"
 
       - name: Verify Managed ZK Circuits & Keys
         run: |
@@ -42,4 +54,4 @@ jobs:
         run: npm test
 
       - name: Validate TypeScript Compilation
-        run: npx tsc --noEmit || true
+        run: npx tsc --noEmit
