@@ -2,8 +2,8 @@
   "name": "new-moon-app",
   "version": "1.0.0",
   "type": "module",
-  "description": "A Midnight Network application created with create-mn-app",
-  "author": "",
+  "description": "Nocturne Vault: Confidential Secret Locker & Dead-Man's Switch on Midnight Network",
+  "author": "Nocturne Protocol",
   "license": "MIT",
   "scripts": {
     "dev": "tsx src/server.ts",
@@ -19,7 +19,8 @@
     "proof-server:stop": "docker compose down",
     "clean": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run clean\" && rm -rf contracts/managed .midnight-state.json .midnight-wallet-state",
     "test": "npx tsx tests/contract.test.ts",
-    "test:e2e": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run test:e2e\""
+    "test:e2e": "wsl bash -c \"cd /home/rudra/new-moon-app && npm run test:e2e\"",
+    "validate": "npx tsx tests/contract.test.ts && npx tsc --noEmit"
   },
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "0.16.0",
