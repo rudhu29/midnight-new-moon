@@ -197,8 +197,9 @@ Follow project updates and building-in-public threads on X:
 
 ## 🚀 Level 6 Users & Supermoon Milestone
 
-- **Target**: 20 verified launch users (Total Community: **70 Verified Preprod Users**)
-- **Launch Cohort Log**: See [`LAUNCH_USERS.md`](LAUNCH_USERS.md) for the 20 onboarded launch wallet addresses.
+- **Target**: 70 verified Preprod users
+- **Current Count**: **70 / 70 Verified Preprod Users**
+- **List of 70 Preprod User Wallet Addresses**: See [`USERS.md`](USERS.md) for the complete consolidated list of 70 verifiable on-chain `mn_addr_preprod1...` addresses, and [`LAUNCH_USERS.md`](LAUNCH_USERS.md) for the Level 6 launch cohort.
 - **Level 6 Improvements**: See [`docs/FEEDBACK.md`](docs/FEEDBACK.md#5-level-6-improvements) for the completed Supermoon enhancements.
 
 ---
