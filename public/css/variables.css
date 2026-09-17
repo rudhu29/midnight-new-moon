@@ -1,0 +1,45 @@
+/* ==========================================================================
+   Nocturne Vault - Design System Tokens & Variables
+   ========================================================================== */
+
+:root {
+  /* Core Color Palette */
+  --bg-core: #06070d;
+  --bg-deep: #0a0c16;
+  --bg-surface: rgba(16, 20, 38, 0.65);
+  --bg-surface-hover: rgba(22, 28, 52, 0.85);
+
+  /* Cyberpunk Accent Colors */
+  --accent-cyan: #00f2fe;
+  --accent-cyan-glow: rgba(0, 242, 254, 0.4);
+  --accent-violet: #4facfe;
+  --accent-purple: #8a2be2;
+  --accent-magenta: #e024c3;
+  --accent-emerald: #00f5a0;
+  --accent-danger: #ff3366;
+  --accent-gold: #ffbe0b;
+
+  /* Text Colors */
+  --text-primary: #f8faff;
+  --text-secondary: #949db8;
+  --text-muted: #5e6682;
+  --text-cyan: #38ef7d;
+
+  /* Glassmorphism Tokens */
+  --glass-bg: rgba(14, 18, 35, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(0, 242, 254, 0.35);
+  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 1px rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(24px) saturate(190%);
+
+  /* Typography */
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Animation Curves */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --transition-fast: 0.18s ease;
+  --transition-normal: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}

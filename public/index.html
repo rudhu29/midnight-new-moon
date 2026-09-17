@@ -16,8 +16,8 @@
   <!-- Three.js for 3D Background -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <!-- Modular CSS Design System -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <!-- Interactive 3D Canvas Background -->
@@ -51,6 +51,12 @@
       </div>
 
       <div class="header-controls">
+        <div class="contract-address-badge" id="btn-copy-header-contract" onclick="copyText('hero-contract-address')" title="Click to copy Midnight Preprod Contract Address">
+          <i class="fa-solid fa-file-contract"></i>
+          <span>Contract: <strong id="hero-contract-address" data-full-address="efa5b7c7dc3b7df598665d90bf2e8c73b815a042a94dfab39d8096b946cb0d71">efa5b7c7dc3b...46cb0d71</strong></span>
+          <i class="fa-regular fa-copy"></i>
+        </div>
+
         <div class="telemetry-chip" title="Live Midnight Preprod Height">
           <i class="fa-solid fa-cube"></i>
           <span>Block #<strong id="live-block-height">1,048,328</strong></span>
@@ -622,7 +628,7 @@ export circuit claimVault(): Bytes[32] {
   <!-- Toast Notification -->
   <div id="toast" class="toast hidden">Copied to clipboard!</div>
 
-  <!-- Main Application Script -->
-  <script src="app.js"></script>
+  <!-- Main Application Script (Modular ES Modules Architecture) -->
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

@@ -1,9 +1,11 @@
 # 📄 Product Idea Proposal: Nocturne Vault
 
-> **Submission for Midnight Monthly Moonshots — Level 3: First Quarter**  
+> **Submission for Midnight Monthly Moonshots — Level 1, Level 2 & Level 3**  
 > **Repository**: [https://github.com/rudhu29/midnight-new-moon](https://github.com/rudhu29/midnight-new-moon)  
 > **Live Demo**: [https://midnight-new-moon.vercel.app](https://midnight-new-moon.vercel.app)  
 > **Preprod Contract Address**: `efa5b7c7dc3b7df598665d90bf2e8c73b815a042a94dfab39d8096b946cb0d71`  
+> **Preprod Deployer Address**: `mn_addr_preprod1rjywwgs5zza2uwmsv2pr7qu3c9xgp9f95mq80fw3c35fxg8d0m4qvm7fke`  
+> **Network**: Midnight Preprod Testnet (`preprod`)  
 
 ---
 

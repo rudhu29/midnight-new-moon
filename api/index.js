@@ -27,6 +27,20 @@ function readFileSafe(relPath) {
   return null;
 }
 
+// Static assets middleware
+const publicDir = path.join(process.cwd(), 'public');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+}
+const jsDir = path.join(process.cwd(), 'public', 'js');
+if (fs.existsSync(jsDir)) {
+  app.use('/js', express.static(jsDir));
+}
+const cssDir = path.join(process.cwd(), 'public', 'css');
+if (fs.existsSync(cssDir)) {
+  app.use('/css', express.static(cssDir));
+}
+
 // Root route handler for index.html
 app.get(['/', '/index.html'], (req, res) => {
   const content = readFileSafe('index.html');
@@ -37,9 +51,9 @@ app.get(['/', '/index.html'], (req, res) => {
   return res.status(200).send('<!DOCTYPE html><html><head><title>Nocturne Vault</title></head><body><h1>Nocturne Vault</h1></body></html>');
 });
 
-// Static assets handlers
-app.get('/style.css', (req, res) => {
-  const content = readFileSafe('style.css');
+// Backward-compatible static asset handlers
+app.get(['/style.css', '/css/style.css'], (req, res) => {
+  const content = readFileSafe('css/style.css') || readFileSafe('style.css');
   if (content) {
     res.setHeader('Content-Type', 'text/css; charset=utf-8');
     return res.status(200).send(content);
@@ -47,8 +61,8 @@ app.get('/style.css', (req, res) => {
   return res.status(404).send('Not Found');
 });
 
-app.get('/app.js', (req, res) => {
-  const content = readFileSafe('app.js');
+app.get(['/app.js', '/js/app.js'], (req, res) => {
+  const content = readFileSafe('js/app.js') || readFileSafe('app.js');
   if (content) {
     res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     return res.status(200).send(content);
@@ -262,5 +276,12 @@ export default function handler(req, res) {
     console.error('Serverless execution error:', err);
     return res.status(500).json({ error: 'Internal server error', details: err?.message });
   }
+}
+
+const PORT = process.env.PORT || 3000;
+if (!process.env.VERCEL && process.argv[1] && (process.argv[1].endsWith('index.js') || process.argv[1].includes('api'))) {
+  app.listen(PORT, () => {
+    console.log(`🌙 Nocturne Vault API Server listening on http://localhost:${PORT}`);
+  });
 }
 
